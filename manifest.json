@@ -1,0 +1,37 @@
+{
+    "manifest_version": 2,
+    "name": "Tenhou score pane",
+    "version": "0.1",
+    "description": "Adds a pane to the tenhou.net/3 client in-game which contains the score history of the hands in the current game",
+    "icons": {
+        "16": "icons/tenhou-16.png",
+        "19": "icons/tenhou-19.png",
+        "32": "icons/tenhou-32.png",
+        "38": "icons/tenhou-38.png",
+        "64": "icons/tenhou-64.png",
+        "128": "icons/tenhou-128.png"
+    },
+    "permissions": [
+        "storage",
+        "tabs",
+        "activeTab",
+        "webRequest",
+        "webRequestBlocking",
+        "*://tenhou.net/3*"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "*://tenhou.net/3*"
+            ],
+            "js": [
+                "jquery.js",
+                "content.js"
+            ],
+            "css": [
+                "content.css"
+            ],
+            "run_at": "document_end"
+        }
+    ]
+}
