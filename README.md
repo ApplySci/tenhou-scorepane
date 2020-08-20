@@ -2,7 +2,7 @@
 
 Scoring pane for tenhou
 
-Plugin for Firefox, and Chrome (not yet tested) - load in debugging mode.
+Plugin for Firefox, and Chrome - load in debugging mode.
 
 Shows details of last hand, on right-hand side of screen.
 
@@ -12,4 +12,17 @@ I haven't yet got a clean way to remove the room type ("4P E-only") from the mid
  
 And it really doesn't like the screen being resized while tenhou is loaded.
 
-Please do contribute pull requests.
+Tested in 4p & 3p.
+
+Download [here](https://github.com/ApplySci/tenhou-scorepane/archive/master.zip)
+
+
+## How to test the addon:
+
+Unzip into a dedicated folder on your local machine.
+
+In **Firefox**: paste this into your address bar: about:debugging#/runtime/this-firefox, and Load Temporary Add-on. Find the manifest.json file in the dedicated folder. Then in a new window, load https://tenhou.net/3
+
+In **Chrome**: go to chrome://extensions/ . Switch Developer mode on (top-right corner). Then "Load unpacked". Then find the dedicated folder where you unzipped the github zip file
+
+# Please do contribute pull requests.
