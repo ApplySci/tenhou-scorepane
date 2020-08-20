@@ -25,4 +25,6 @@ In **Firefox**: paste this into your address bar: about:debugging#/runtime/this-
 
 In **Chrome**: go to chrome://extensions/ . Switch Developer mode on (top-right corner). Then "Load unpacked". Then find the dedicated folder where you unzipped the github zip file
 
+The scoring pane does work on game logs as well as live games. Stepping through the results in a game log is the easiest way to test this extension. Go to the start of the second hand, or later, and then go back one turn - that takes you to the end of the last hand.
+
 # Please do contribute pull requests.

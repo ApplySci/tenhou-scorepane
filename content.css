@@ -1,5 +1,15 @@
 #azpspane {
-    font-size:0.7em;
+    position: absolute;
+    top: 10px;
+    padding-left: 20px;
+    overflow-y: scroll;
+    z-index: -1;
+    font-size: 0.7em;
+    height: 95%;
+}
+
+#azpspane table {
+    width: 100%;
 }
 
 .azpsicons {
