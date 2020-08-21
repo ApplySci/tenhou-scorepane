@@ -1,18 +1,14 @@
 # tenhou-scorepane
 
-Scoring pane for tenhou
+## Scoring pane for tenhou
 
 Plugin for Firefox, and Chrome - load in debugging mode.
 
 Shows details of last hand, on right-hand side of screen.
 
-Just proof-of-concept, it's very brittle.
+It really doesn't like the screen being resized while tenhou is loaded.
 
-I haven't yet got a clean way to remove the room type ("4P E-only") from the middle of the pane
- 
-And it really doesn't like the screen being resized while tenhou is loaded.
-
-Tested in 4p & 3p.
+Tested in 4p & 3p, firefox & chrome
 
 Download [here](https://github.com/ApplySci/tenhou-scorepane/archive/master.zip)
 
@@ -25,6 +21,11 @@ In **Firefox**: paste this into your address bar: about:debugging#/runtime/this-
 
 In **Chrome**: go to chrome://extensions/ . Switch Developer mode on (top-right corner). Then "Load unpacked". Then find the dedicated folder where you unzipped the github zip file
 
-The scoring pane does work on game logs as well as live games. Stepping through the results in a game log is the easiest way to test this extension. Go to the start of the second hand, or later, and then go back one turn - that takes you to the end of the last hand.
+The scoring pane works on game logs as well as live games. Stepping through the results in a game log is the easiest way to test this extension. Go to the start of the second hand, or later, and then go back one turn - that takes you to the end of the last hand.
 
 # Please do contribute pull requests.
+
+## TODO
+
+- test yakuman
+- hook into screen resizing event; and resize score pane accordingly
