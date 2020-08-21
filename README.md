@@ -6,8 +6,6 @@ Plugin for Firefox, and Chrome - load in debugging mode.
 
 Shows details of last hand, on right-hand side of screen.
 
-It really doesn't like the screen being resized while tenhou is loaded.
-
 Tested in 4p & 3p, firefox & chrome
 
 Download [here](https://github.com/ApplySci/tenhou-scorepane/archive/master.zip)
@@ -29,5 +27,4 @@ The scoring pane works on game logs as well as live games. Stepping through the 
 
 ## TODO
 
-- hook into screen resizing event; and resize score pane accordingly
-- do a reward animation for first place
+- do a reward animation for first place, with an option screen to disable this

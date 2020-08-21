@@ -21,6 +21,13 @@ function setToObserve() {
 
 chrome.runtime.onMessage.addListener(setToObserve);
 
+function setWidth() {
+    let gamePane = $('div.nosel > div.nosel');
+    $('#' + paneID).css({
+        'width': $('body').width() - gamePane.width() - 40
+    });
+}
+
 function makePane() {
     // ensure our pane is actually present:
 
@@ -29,11 +36,9 @@ function makePane() {
     if (pane.length === 0) {
         let gamePane = $('div.nosel > div.nosel');
         gamePane.css('margin-left', 10);
-        pane = $('<div>').prop('id', paneID).css({
-            'left': gamePane.width() + 10,
-            'width': screen.availWidth - gamePane.width() - 40
-        });
+        pane = $('<div>').prop('id', paneID);
         $('body').append(pane);
+        setWidth();
     }
     return pane;
 }
@@ -187,4 +192,12 @@ function onMutate(mutations) {
 chrome.storage.local.get(null, function(options) {
     mutationObserver = new MutationObserver(onMutate);
     setToObserve();
+    let timeout;
+    $(window).resize(function() {
+        // this needs a delay, as Tenhou itself takes time to resize the game pane when the screen is resized
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        timeout = setTimeout(setWidth, 1000);
+    });
 });
