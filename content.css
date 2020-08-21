@@ -4,7 +4,7 @@
     padding-left: 20px;
     overflow-y: scroll;
     z-index: -1;
-    font-size: 0.7em;
+    font-size: 0.5em;
     height: 95%;
 }
 
@@ -19,13 +19,12 @@
 }
 
 #azpspane > div {
-    border-top: 1px solid #AAA;
+    border-bottom: 1px solid #AAA;
     padding-bottom: 1em;
 }
 
 #azpspane > div:nth-child(2) {
     background-color: #111;
-    border-top
 }
 
 #azpspane table {

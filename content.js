@@ -42,7 +42,7 @@ function showResult(texts) {
     makePane()
         .prepend($('<div>')
             .html(texts)
-            .prepend($('<h3>').text('Hand ' + handNum++))
+            .prepend($('<h2>').text('Hand ' + handNum++))
             )
         .prop('scrollTop', 0);
 }
@@ -59,6 +59,40 @@ function appendNodes(fromDom) {
     return toString;
 }
 
+function riichiHonba(node) {
+    return '<span class=azpsicons>'
+            + $("tr:first td:first", node)[0].innerText
+            + '</span>';
+}
+
+function scoreTable(node) {
+    let totalLine = '<table>';
+    let nPlayers = 3 + ($('#sc3', node).length ? 1 : 0);
+
+    for (let i=0; i < nPlayers; i++) {
+        // #scN has childNodes containing: wind, space, name, space, total score, [optional: delta]
+        let el = $('#sc' + i, node)[0];
+        totalLine += '<tr>';
+        for (let idx of [0, 2, 4]) {
+            totalLine += '<td>' + getVal(el.childNodes[idx]) + '</td>';
+        }
+        if (el.childNodes.length > 5) {
+            let score = getVal(el.childNodes[5]);
+            totalLine += '<td class='
+            + (score > 0 ? 'azpsplus' : 'azpsminus')
+            + '>'
+            + score
+            + '</td>'
+        } else {
+            totalLine += '<td></td>';
+        }
+
+        totalLine += '</tr>';
+    }
+
+    return totalLine + '</table>';
+}
+
 function checkNode(oneNode) {
     if (!oneNode.childNodes.length) {
         return;
@@ -73,33 +107,34 @@ function checkNode(oneNode) {
         return;
     }
 
-    // is this a redeal / exhaustive draw:
 
     if (testText.length > 10
         && (testText.substr(0,6) === 'Redeal' || testText.substr(0,2) === '流局')
         && oneNode.className === 'tbc'
         ) {
 
-        // the >10 check is there because when tenhou loads,
-        // it loads a redeal node, which only contains "Redeal",
-        // which we don't want to be triggered by, here
-        console.log(oneNode);
-        showResult(testText);
+        // exhaustive draw
+
+        let outcome = oneNode.childNodes[0].childNodes[1];
+        let totalLine = '<h3>Draw '
+            + riichiHonba(outcome)
+            + '</h3>'
+            + scoreTable(outcome);
+
+        showResult(totalLine);
         return;
     }
 
-    // is this the total div for a hand that's been won and lost
 
     if (oneNode.childNodes[0].id === 'total') {
+        // a hand that's been won and lost
 
         // TODO check if this breaks with yakuman
 
-        let totalLine = appendNodes(oneNode.children[0])  // header row contains score
-            + '<br><span class=azpsicons>'
-            + $("tr:first td:first", oneNode.childNodes[2])[0].innerText // riichi sticks and honba
-            + '</span><table>';
-
-        totalLine += '';
+        let totalLine = appendNodes(oneNode.children[0])  // score
+            + '<br>'
+            + riichiHonba(oneNode.childNodes[2])
+            + '<table>';
 
         // get all the yaku
 
@@ -111,43 +146,33 @@ function checkNode(oneNode) {
                 + '</td></tr>';
         });
 
-        totalLine += '</table><table>';
-
-        for (let i=0; i<4; i++) {
-            // #sc0 - childNodes: wind space name space score [delta]
-            let el = $('#sc' + i, oneNode)[0];
-            totalLine += '<tr>';
-            for (let idx of [0, 2, 4]) {
-                totalLine += '<td>' + getVal(el.childNodes[idx]) + '</td>';
-            }
-            if (el.childNodes.length > 5) {
-                let score = getVal(el.childNodes[5]);
-                totalLine += '<td class='
-                + (score > 0 ? 'azpsplus' : 'azpsminus')
-                + '>'
-                + score
-                + '</td>'
-            } else {
-                totalLine += '<td></td>';
-            }
-               
-            totalLine += '</tr>';
-        }
-
-        totalLine += '</table>';
+        totalLine += '</table>' + scoreTable(oneNode.childNodes[2]);
 
         showResult(totalLine);
+        return;
     }
-
-    // is it the end of the game
-    // in which case, we can remove our pane, and re-centre the game screen
 
     if (testText.substr(0,2) === '終局' || testText.substr(0,3) === 'End') {
-        // TODO check if 1st; if so, do reward animation
+        // end of the game: remove our pane, and re-centre the game screen
+        // TODO check if 1st place; if so, do reward animation
         $('#' + paneID).remove();
         $('div.nosel > div.nosel').css('margin', '0 auto');
+        return;
     }
-    return;
+
+
+    if (oneNode.className === 'tbc' && $('#sc0', oneNode).length && $('table', oneNode).length == 1) {
+        // abortive draw
+        let outcome = oneNode.childNodes[0].childNodes[1];
+        let totalLine = '<h3>'
+            + oneNode.childNodes[0].childNodes[0].innerText
+            + ' '
+            + riichiHonba(outcome)
+            + '</h3>'
+
+        showResult(totalLine);
+        return;
+    }
 }
 
 function onMutate(mutations) {
