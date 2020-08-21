@@ -8,8 +8,37 @@
     height: 95%;
 }
 
+.azpsplus {
+    color: #F88;
+    text-align: right;
+}
+
+.azpsminus {
+    color: #8F8;
+    text-align: right;
+}
+
+#azpspane > div {
+    border-top: 1px solid #AAA;
+    padding-bottom: 1em;
+}
+
+#azpspane > div:nth-child(2) {
+    background-color: #111;
+    border-top
+}
+
 #azpspane table {
     width: 100%;
+    padding-top: 0.5em;
+}
+
+#azpspane tr:nth-child(2n+0) {
+    background-color: #111;
+}
+
+#azpspane tr:nth-child(2n+1) {
+    background-color: #000;
 }
 
 .azpsicons {

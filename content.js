@@ -5,7 +5,7 @@
 
 let mutationObserver;
 let $ = jQuery;
-let inTotal = 0;
+let handNum = 1;
 
 const paneID='azpspane';
 
@@ -38,12 +38,13 @@ function makePane() {
     return pane;
 }
 
-function showResult(header, texts) {
+function showResult(texts) {
     makePane()
-        .empty()
-        .html(texts)
-        .prepend($('<h3>').text(header))
-        ;
+        .prepend($('<div>')
+            .html(texts)
+            .prepend($('<h3>').text('Hand ' + handNum++))
+            )
+        .prop('scrollTop', 0);
 }
 
 function getVal(node) {
@@ -67,7 +68,8 @@ function checkNode(oneNode) {
     let testText = oneNode.innerText;
 
     if (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局') {
-        showResult('', '');
+        handNum = 1;
+        makePane().empty();
         return;
     }
 
@@ -75,13 +77,14 @@ function checkNode(oneNode) {
 
     if (testText.length > 10
         && (testText.substr(0,6) === 'Redeal' || testText.substr(0,2) === '流局')
+        && oneNode.className === 'tbc'
         ) {
 
         // the >10 check is there because when tenhou loads,
         // it loads a redeal node, which only contains "Redeal",
         // which we don't want to be triggered by, here
         console.log(oneNode);
-        showResult('Previous hand - redeal', testText);
+        showResult(testText);
         return;
     }
 
@@ -114,23 +117,33 @@ function checkNode(oneNode) {
             // #sc0 - childNodes: wind space name space score [delta]
             let el = $('#sc' + i, oneNode)[0];
             totalLine += '<tr>';
-            for (let idx of [0, 2, 4, 5]) {
-                totalLine += '<td>'
-                    + (el.childNodes.length > idx ? getVal(el.childNodes[idx]) : '')
-                    + '</td>';
+            for (let idx of [0, 2, 4]) {
+                totalLine += '<td>' + getVal(el.childNodes[idx]) + '</td>';
             }
+            if (el.childNodes.length > 5) {
+                let score = getVal(el.childNodes[5]);
+                totalLine += '<td class='
+                + (score > 0 ? 'azpsplus' : 'azpsminus')
+                + '>'
+                + score
+                + '</td>'
+            } else {
+                totalLine += '<td></td>';
+            }
+               
             totalLine += '</tr>';
         }
 
         totalLine += '</table>';
 
-        showResult('Previous hand', totalLine);
+        showResult(totalLine);
     }
 
     // is it the end of the game
     // in which case, we can remove our pane, and re-centre the game screen
 
     if (testText.substr(0,2) === '終局' || testText.substr(0,3) === 'End') {
+        // TODO check if 1st; if so, do reward animation
         $('#' + paneID).remove();
         $('div.nosel > div.nosel').css('margin', '0 auto');
     }
