@@ -78,8 +78,9 @@ function scoreTable(node) {
         // #scN has childNodes containing: wind, space, name, space, total score, [optional: delta]
         let el = $('#sc' + i, node)[0];
         totalLine += '<tr>';
+        let nNodes = el.childNodes.length;
         for (let idx of [0, 2, 4]) {
-            totalLine += '<td>' + getVal(el.childNodes[idx]) + '</td>';
+            totalLine += '<td>' + (idx < nNodes ? getVal(el.childNodes[idx]) : '') + '</td>';
         }
         if (el.childNodes.length > 5) {
             let score = getVal(el.childNodes[5]);

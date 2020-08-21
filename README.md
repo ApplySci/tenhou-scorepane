@@ -30,3 +30,9 @@ The scoring pane works on game logs as well as live games. Stepping through the 
 - do a reward animation for first place, with an option screen to disable this
 
 ![screen](https://media.discordapp.net/attachments/712257404548415539/746298551226859531/unknown.png)
+
+### THANKS
+
+- Thank you to MariaL for the original idea.
+- Thank you to GlassyMJ for being my first tester, and for the very helpful detective work
+
