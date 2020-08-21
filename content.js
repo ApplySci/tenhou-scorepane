@@ -129,8 +129,6 @@ function checkNode(oneNode) {
     if (oneNode.childNodes[0].id === 'total') {
         // a hand that's been won and lost
 
-        // TODO check if this breaks with yakuman
-
         let totalLine = appendNodes(oneNode.children[0])  // score
             + '<br>'
             + riichiHonba(oneNode.childNodes[2])

@@ -14,12 +14,12 @@
         "tabs",
         "activeTab",
         "webRequest",
-        "webRequestBlocking",
-        "*://tenhou.net/3*"
+        "webRequestBlocking"
     ],
     "content_scripts": [
         {
             "matches": [
+                "*://tenhou.net/0*",
                 "*://tenhou.net/3*"
             ],
             "js": [

@@ -1,11 +1,12 @@
 #azpspane {
     position: absolute;
     top: 10px;
-    padding-left: 20px;
+    padding: 0 20px;
     overflow-y: scroll;
     z-index: -1;
     font-size: 0.5em;
     height: 95%;
+    
 }
 
 .azpsplus {
