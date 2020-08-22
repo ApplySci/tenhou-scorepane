@@ -35,7 +35,8 @@ function setWidth() {
 }
 
 function makePane() {
-    // ensure our pane is actually present:
+
+    // if our score pane isn't present, create it
 
     let pane = $('#' + paneID);
 
@@ -51,6 +52,16 @@ function makePane() {
         setWidth();
     }
     return pane;
+}
+
+function rememberPlayerName(node) {
+    if (playerName !== null) {
+        return;
+    }
+    let player = $('#sc0', node);
+    if (player.length) {
+        playerName = player[0].childNodes[2].innerText;
+    }
 }
 
 function showResult(texts) {
@@ -122,6 +133,9 @@ function scoreTable(node) {
 }
 
 function showExhaustiveDraw(node) {
+
+    rememberPlayerName(node);
+
     let outcome = node.childNodes[0].childNodes[1];
     let totalLine = '<h3>Draw '
         + riichiHonba(outcome)
@@ -132,6 +146,8 @@ function showExhaustiveDraw(node) {
 }
 
 function showWin(node) {
+
+    rememberPlayerName(node);
 
     let totalLine = appendNodes(node.children[0])  // score
         + '<br>'
@@ -155,15 +171,24 @@ function showWin(node) {
 
 function handleEnd(node) {
     // Remove our pane, and re-centre the game screen
-    // TODO check if 1st place; if so, do reward animation
+    // TODO check if 1st place; if so, do reward animation,
+    // but not if this is a replay
 
-    console.log(node);
+    console.log('end');
+    console.log($('table > tbody > tr > td:first').text());
     // player names: tab > tr > td:first > childNodes[0]
+}
+
+function removePane() {
+    console.log('remove pane');
     $('#' + paneID).remove();
     getGamePane().css('margin', '0 auto');
 }
 
 function showAbortiveDraw(node) {
+
+    rememberPlayerName(node);
+
     let outcome = node.childNodes[0].childNodes[1];
     let totalLine = '<h3>'
         + node.childNodes[0].childNodes[0].innerText
@@ -198,8 +223,8 @@ function checkNode(oneNode) {
 
         showWin(oneNode);
 
-    } else if (testText.substr(0,2) === '終局'
-                || testText.substr(0,3) === 'End') {
+    } else if (oneNode.className === 'tbc'
+        && (testText.substr(0,2) === '終局' || testText.substr(0,3) === 'End')) {
 
         handleEnd(oneNode);
 
@@ -208,6 +233,11 @@ function checkNode(oneNode) {
         && $('table', oneNode).length === 1) {
 
         showAbortiveDraw(oneNode);
+
+    } else if ($('#pane1', oneNode).length) {
+
+        removePane();
+
     }
 }
 

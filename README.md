@@ -27,7 +27,7 @@ The scoring pane works on game logs as well as live games. Stepping through the 
 
 ## TODO
 
-- make it less brittle
+- put it into the Chrome extensions store and the firefox addon store
 
 ### Possible additions:
 
@@ -39,4 +39,3 @@ The scoring pane works on game logs as well as live games. Stepping through the 
 
 - Thank you to MariaL for the original idea.
 - Thank you to glassyMJ for being my first tester, and for the very helpful detective work
-
