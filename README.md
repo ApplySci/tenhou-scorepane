@@ -8,10 +8,10 @@ Shows details of last hand, on right-hand side of screen.
 
 Tested in 4p & 3p, firefox & chrome
 
-Download [here](https://github.com/ApplySci/tenhou-scorepane/archive/master.zip)
-
 
 ## How to test the addon:
+
+[Download](https://github.com/ApplySci/tenhou-scorepane/archive/master.zip)
 
 Unzip into a dedicated folder on your local machine.
 
@@ -27,12 +27,16 @@ The scoring pane works on game logs as well as live games. Stepping through the 
 
 ## TODO
 
-- do a reward animation for first place, with an option screen to disable this
+- make it less brittle
+
+### Possible additions:
+
+- do a reward animation, with sounds, for first place, with an option screen to disable this
 
 ![screen](https://media.discordapp.net/attachments/712257404548415539/746298551226859531/unknown.png)
 
 ### THANKS
 
 - Thank you to MariaL for the original idea.
-- Thank you to GlassyMJ for being my first tester, and for the very helpful detective work
+- Thank you to glassyMJ for being my first tester, and for the very helpful detective work
 

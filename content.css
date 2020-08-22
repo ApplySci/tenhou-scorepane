@@ -3,19 +3,17 @@
     top: 10px;
     padding: 0 20px;
     overflow-y: scroll;
-    z-index: -1;
     font-size: 0.5em;
     height: 95%;
     right: 0;
-    
 }
 
-.azpsplus {
+#azpspane .azpsplus {
     color: #F88;
     text-align: right;
 }
 
-.azpsminus {
+#azpspane .azpsminus {
     color: #8F8;
     text-align: right;
 }
@@ -32,6 +30,7 @@
 #azpspane table {
     width: 100%;
     padding-top: 0.5em;
+    border-collapse: collapse;
 }
 
 #azpspane tr:nth-child(2n+0) {
@@ -42,6 +41,6 @@
     background-color: #000;
 }
 
-.azpsicons {
+#azpspane .azpsicons {
     font-family: icons2, sans-serif;
 }

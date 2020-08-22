@@ -10,11 +10,8 @@
         "128": "icons/128.png"
     },
     "permissions": [
-        "storage",
-        "tabs",
         "activeTab",
-        "webRequest",
-        "webRequestBlocking"
+        "storage"
     ],
     "content_scripts": [
         {
@@ -29,7 +26,7 @@
             "css": [
                 "content.css"
             ],
-            "run_at": "document_end"
+            "run_at": "document_idle"
         }
     ]
 }
