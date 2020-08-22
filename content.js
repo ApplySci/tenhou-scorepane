@@ -34,7 +34,7 @@ function setWidth() {
     });
 }
 
-function makePane() {
+function scorePane() {
 
     // if our score pane isn't present, create it
 
@@ -65,7 +65,7 @@ function rememberPlayerName(node) {
 }
 
 function showResult(texts) {
-    makePane()
+    scorePane()
         .prepend($('<div>')
             .html(texts)
             .prepend($('<h2>').text('Hand ' + handNum))
@@ -170,18 +170,23 @@ function showWin(node) {
 }
 
 function handleEnd(node) {
-    // Remove our pane, and re-centre the game screen
-    // TODO check if 1st place; if so, do reward animation,
-    // but not if this is a replay
 
-    console.log('end');
-    console.log($('table > tbody > tr > td:first').text());
-    // player names: tab > tr > td:first > childNodes[0]
+    let winner = $('table > tbody > tr > td:first', node)[0]
+        .childNodes[0]
+        .nodeValue;
+
+    if (winner !== playerName || $('div.tbc.bgb:contains(Exit)').length) {
+        return;
+    }
+    // if we are here, then the live player has won
+    // TODO do something nice to mark the win
+    scorePane().prepend($('<h1>').text('winner, winner, chicken dinner'));
 }
 
 function removePane() {
-    console.log('remove pane');
+    // Remove our score pane
     $('#' + paneID).remove();
+    // Re-centre the tenhou main panel
     getGamePane().css('margin', '0 auto');
 }
 
@@ -201,7 +206,7 @@ function showAbortiveDraw(node) {
 
 function handleStart() {
     handNum = 1;
-    makePane().empty();
+    scorePane().empty();
 }
 
 function checkNode(oneNode) {
