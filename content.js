@@ -179,8 +179,8 @@ function handleEnd(node) {
         return;
     }
     // if we are here, then the live player has won
-    // TODO do something nice to mark the win
-    scorePane().prepend($('<h1>').text('winner, winner, chicken dinner'));
+    // TODO do something nice to mark the win; add options sceen to manage this
+    console.log('winner, winner, chicken dinner');
 }
 
 function removePane() {
