@@ -156,7 +156,9 @@ function showWin(node) {
 
     // get all the yaku
 
-    $("tr:not(:has(table))", node.childNodes[1]).each(function (row) {
+    let yakuTable = $("tr:not(:has(table))", node.childNodes[1]);
+    let nYaku = yakuTable.length;
+    yakuTable.each(function (row) {
         totalLine += '<tr><td>'
             + getVal(this.childNodes[0])
             + '</td><td>'
@@ -166,7 +168,8 @@ function showWin(node) {
 
     totalLine += '</table>' + scoreTable(node.childNodes[2]);
 
-    showResult(totalLine);
+    // pause so we don't spoil any uradora surprise
+    setTimeout(() => showResult(totalLine), 500 + nYaku * 1000);
 }
 
 function handleEnd(node) {
