@@ -27,7 +27,7 @@ The scoring pane works on game logs as well as live games. Stepping through the 
 
 ## TODO
 
-- put it into the Chrome extensions store and the firefox addon store
+- think of something useful to add, or something useless to remove
 
 ### Possible additions:
 

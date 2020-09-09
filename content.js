@@ -98,7 +98,7 @@ function getOneScore(node, player) {
         // #scN has childNodes containing:
         // wind, space, name, space, total score, [optional: delta]
 
-        let totalLine = '<tr>';
+        let totalLine = '';
         let el = $('#sc' + player, node)[0];
         let nNodes = el.childNodes.length;
 
@@ -110,14 +110,15 @@ function getOneScore(node, player) {
 
         if (el.childNodes.length > 5) {
             let score = getVal(el.childNodes[5]);
-            totalLine += '<td class='
+            totalLine =  '<tr class="' 
                 + (score > 0 ? 'azpsplus' : 'azpsminus')
-                + '>'
+                + '">' 
+                + totalLine
+                + '<td>'
                 + score;
         } else {
-            totalLine += '<td>';
+            totalLine = '<tr>' + totalLine + '<td>';
         }
-
         return totalLine + '</td></tr>';
 }
 
@@ -159,10 +160,13 @@ function showWin(node) {
     let yakuTable = $("tr:not(:has(table))", node.childNodes[1]);
     let nYaku = yakuTable.length;
     yakuTable.each(function (row) {
-        totalLine += '<tr><td>'
+        let hanCount = getVal(this.childNodes[1]);
+        totalLine += '<tr'
+            + ((hanCount.trimLeft()[0] === '0') ? ' class=azpsgrey' : '')
+            + '><td>'
             + getVal(this.childNodes[0])
             + '</td><td>'
-            + getVal(this.childNodes[1])
+            + hanCount
             + '</td></tr>';
     });
 
@@ -259,6 +263,7 @@ function onMutate(mutations) {
                         checkNode(node);
                     }
                 } catch (e) {
+                    debugger;
                     console.log(e);
                 }
             });

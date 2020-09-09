@@ -31,16 +31,27 @@
     background-color: #000;
 }
 
+#azpspane td:nth-child(3),#azpspane td:nth-child(4) {
+    text-align: right;
+}
+
+#azpspane table {
+    margin-top: 0.5em;
+}
+
+.azpsgrey {
+    color: grey;
+}
+
 .azpsicons {
     font-family: icons2, sans-serif;
 }
 
+
 .azpsplus {
     color: #8F8;
-    text-align: right;
 }
 
 .azpsminus {
     color: #F88;
-    text-align: right;
 }
