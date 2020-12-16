@@ -19,7 +19,7 @@ In **Firefox**: paste this into your address bar: about:debugging#/runtime/this-
 
 In **Chrome**: go to chrome://extensions/ . Switch Developer mode on (top-right corner). Then "Load unpacked". Then find the dedicated folder where you unzipped the github zip file
 
-Then in a new window, load https://tenhou.net/3
+Then in a new window, load [https://tenhou.net/3](https://tenhou.net/3) or [https://tenhou.net/4](https://tenhou.net/4)
  
 The scoring pane works on game logs as well as live games. Stepping through the results in a game log is the easiest way to test this extension. Go to the start of the second hand, or later, and then go back one turn - that takes you to the end of the last hand.
 
