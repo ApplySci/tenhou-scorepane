@@ -261,9 +261,9 @@ function showWin(node) {
         totalLine += '<table>';
         let yakuTable = $("tr:not(:has(table))", node.childNodes[1]);
         nYaku = yakuTable.length;
-        yakuTable.each((row) =>
-            totalLine += yakuLine(getVal(this.childNodes[0]), getVal(this.childNodes[1]))
-        );
+        yakuTable.each(function addYakuLine(row) {
+            totalLine += yakuLine(getVal(this.childNodes[0]), getVal(this.childNodes[1]));
+        });
         totalLine += '</table>';
         
         // get the scores
