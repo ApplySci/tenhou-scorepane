@@ -1,4 +1,4 @@
-/*jshint esversion:6 */
+/*jshint esversion:6, -W014 */
 /*jslint single, browser, fudge, this */
 /*global jQuery, window, chrome, MutationObserver, console */
 
@@ -209,59 +209,65 @@ function showExhaustiveDraw(node) {
     showResult(block);
 }
 
+function yakuLine(yaku, han) {
+    return '<tr'
+        + ((han.trimLeft()[0] === '0') ? ' class=azpsgrey' : '')
+        + '><td>'
+        + yaku
+        + '</td><td>'
+        + han
+        + '</td></tr>';
+}
+
 function showWin(node) {
 
-/*
-"<div class="nopp"><div class="s0"><canvas></canvas><canvas></canvas><div>
-<table cellspacing="0" cellpadding="0"><tbody>
-<tr><td width="50%" valign="top" align="center">
-<table cellspacing="0" cellpadding="0"><tbody>
-<tr><td align="left"><div class="yk">役牌 白</div></td><td align="left"><div class="hn">　1<span class="gray">飜</span></div></td></tr>
-<tr><td align="left"><div class="yk">ドラ</div></td><td align="left"><div class="hn">　2<span class="gray">飜</span></div></td></tr>
-<tr><td align="left"><div class="yk">赤ドラ</div></td><td align="left"><div class="hn">　2<span class="gray">飜</span></div></td></tr></tbody></table>
-</td></tr>
-</tbody></table>
-</div>
-<canvas class="nodisp" width="0" height="0"></canvas>
-<div><span class="gray">滿貫</span>8000<span class="gray">点</span></div>
-<div>
-<table width="100%" cellspacing="0" cellpadding="0"><tbody>
-<tr><td rowspan="1"><span class="gray">\ue804</span>0 <span class="gray">\ue805</span>0</td><td rowspan="2"><div class="bbg5"><span>北</span> <span>COM</span><br>25000</div></td><td rowspan="1"><span class="gray">四般東喰赤</span></td></tr>
-<tr><td rowspan="2"><div class="bbg5"><span>東</span> <span>COM</span><br>25000</div></td><td rowspan="2"><div class="bbg5"><span>西</span> <span>COM</span><br>25000 <span>-8000</span></div></td></tr>
-<tr><td rowspan="2"><div class="bbg5"><span>南</span> <span>ApplySci</span><br>25000 <span>+8000</span></div></td></tr>
-<tr><td rowspan="1"></td><td rowspan="1"></td></tr></tbody></table>
-</div><button class="btn s7" name="c5">OK</button></div>
-</div>"
-*/
+    /*
+    <tr><td align="left"><div class="yk">役牌 白</div></td><td align="left"><div class="hn">　1<span class="gray">飜</span></div></td></tr>
+
+    <tr><td rowspan="1"><span class="gray">\ue804</span>0 <span class="gray">\ue805</span>0</td><td rowspan="2"><div class="bbg5"><span>北</span> <span>COM</span><br>25000</div></td><td rowspan="1"><span class="gray">四般東喰赤</span></td></tr>
+    <tr><td rowspan="2"><div class="bbg5"><span>東</span> <span>COM</span><br>25000</div></td><td rowspan="2"><div class="bbg5"><span>西</span> <span>COM</span><br>25000 <span>-8000</span></div></td></tr>
+    <tr><td rowspan="2"><div class="bbg5"><span>南</span> <span>ApplySci</span><br>25000 <span>+8000</span></div></td></tr>
+    <tr><td rowspan="1"></td><td rowspan="1"></td></tr>
+    */
 
     rememberPlayerName(node);
     let totalLine = 'Win!';
-    let nYaku = 0;
+    let nYaku;
     
     if (isT4) {
-        // TODO
+        totalLine = appendNodes($('div.s0 div:eq(1)', node)[0]); // score
+                //+ '<br>'
+                //+ riichiHonba($('table:eq(1)', node));
+                
+        // get the yaku
+        
+        totalLine += '<table>';
+        let yakuList = $('table:first tr', node);
+        nYaku = yakuList.length;
+        yakuList.each((row) => totalLine += yakuLine($('.yk', row).text(), $('.hn', row).text()));
+        totalLine += '</table>';
+        
+        // TODO get the scores
+        
+        totalLine += scoreTableT4($('table:eq(1)', node));
+        
     } else {
         totalLine = appendNodes(node.children[0])  // score
             + '<br>'
-            + riichiHonba(node.childNodes[2])
-            + '<table>';
+            + riichiHonba(node.childNodes[2]);
 
-        // get all the yaku
+        // get the yaku
 
+        totalLine += '<table>';
         let yakuTable = $("tr:not(:has(table))", node.childNodes[1]);
         nYaku = yakuTable.length;
-        yakuTable.each(function (row) {
-            let hanCount = getVal(this.childNodes[1]);
-            totalLine += '<tr'
-                + ((hanCount.trimLeft()[0] === '0') ? ' class=azpsgrey' : '')
-                + '><td>'
-                + getVal(this.childNodes[0])
-                + '</td><td>'
-                + hanCount
-                + '</td></tr>';
-        });
-
-        totalLine += '</table>' + scoreTableT3(node.childNodes[2]);
+        yakuTable.each((row) =>
+            totalLine += yakuLine(getVal(this.childNodes[0]), getVal(this.childNodes[1]))
+        );
+        totalLine += '</table>';
+        
+        // get the scores
+        totalLine += scoreTableT3(node.childNodes[2]);
     }
 
     // pause so we don't spoil any uradora surprise
@@ -329,15 +335,16 @@ function checkNode(oneNode) {
         return;
     }
 
-    if (false && oneNode.className.includes('nopp')) {
+/*
+if (false && oneNode.className.includes('nopp')) {
         console.log('========================================');
         console.log(isT4 && testText.length > 20 && testText.substr(0,2) === '役牌');
         console.log(testText);
     }
-    
+*/
+
     if (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局') {
 
-        console.log('start');
         handleStart(oneNode);
 
     } else if (testText.length > 10
@@ -345,16 +352,12 @@ function checkNode(oneNode) {
         && (oneNode.className === 'tbc' || (isT4 && oneNode.className.includes('nopp')))
         ) {
             
-        console.log('draw');
         showExhaustiveDraw(oneNode);
 
     } else if (oneNode.childNodes[0].id === 'total'
-        || (isT4 && testText.length > 20 && oneNode.className.includes('nopp') /*&& (
-            testText.substr(0,2) === '自風' || testText.substr(0,2) === '役牌'
-            || testText.substr(0,5) === 'Tsumo' || testText.substr(0,3) === 'Ron'
-        )*/ ) ) {
+        || (isT4 && testText.length > 20 && oneNode.className.includes('nopp')
+        ) ) {
             
-        console.log('win');
         showWin(oneNode);
 
     } else if (
@@ -362,16 +365,13 @@ function checkNode(oneNode) {
         && (testText.substr(0,2) === '終局' || testText.substr(0,3) === 'End')
         ) {
             
-        console.log('end');
         handleEnd(oneNode);
 
     } else if ((oneNode.className === 'tbc'
             && $('#sc0', oneNode).length
             && $('table', oneNode).length === 1)
-        // || (isT4 && (testText.substr(0,2) === '流局' || testText.substr(0,5) === 'Redeal')) - TODO seems to be subsumed under general DRAW currently
         ) {
             
-        console.log('abortive draw');
         showAbortiveDraw(oneNode);
 
     } else if ($('#' + paneID).length && (
@@ -379,7 +379,6 @@ function checkNode(oneNode) {
             || (isT4 && oneNode.className.includes('s0') && testText.includes('Online:'))
         ) ) {
             
-        console.log('removePane');
         removePane();
 
     }
