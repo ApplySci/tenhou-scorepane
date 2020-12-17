@@ -49,19 +49,21 @@ function scorePane() {
     // if our score pane isn't present, create it
 
     let pane = $('#' + paneID);
+    let fontsize = '0.5em';
 
     if (pane.length === 0) {
 
         let gamePane = getGamePane();
         if (isT4) {
             gamePane.css('transform' ,'translateX(0)');
+             fontsize = '1em';
         } else {
             gamePane
                 .css('margin-left', 10)
                 .next()
                     .css('left', 0);
         }
-        pane = $('<div>').prop('id', paneID);
+        pane = $('<div>').prop('id', paneID).css('fontSize', fontsize);
         $('body').append(pane);
         setWidth();
     }
@@ -115,7 +117,7 @@ function riichiHonba(node) {
             + '</span>';
 }
 
-function getOneScore(node, player) {
+function getOneScoreT3(node, player) {
 
         // #scN has childNodes containing:
         // wind, space, name, space, total score, [optional: delta]
@@ -144,49 +146,102 @@ function getOneScore(node, player) {
         return totalLine + '</td></tr>';
 }
 
-function scoreTable(node) {
+function scoreTableT3(node) {
 
     let totalLine = '<table>';
     let nPlayers = 3 + ($('#sc3', node).length ? 1 : 0);
     Array.from(new Array(nPlayers).keys()).forEach(function (i) {
-        totalLine += getOneScore(node, i);
+        totalLine += getOneScoreT3(node, i);
     });
     return totalLine + '</table>';
 
 }
 
-function showExhaustiveDraw(node) {
+function getOneScoreT4(node, player) {
+    // <div class="bbg5"><span>東</span> <span>COM</span><br>25000</div>
 
-/*
- "<div class="nopp" style="width: 1008px; height: 756px; transform-origin: 0px 0px 0px; transform: scale(1); font-size: 20.16px; color: rgb(255, 255, 255);"><div class="s0" style="pointer-events: auto; position: absolute; background: rgba(0, 0, 0, 0.9) none repeat scroll 0% 0%; text-align: center; border: 0.8px solid rgb(68, 68, 68); padding: 16px 0px; left: 50%; top: 50%; opacity: 0; transform: translate(-50%, -50%) scale(0.95); width: 70%; height: 49.3122%;"><canvas class="nodisp" width="0" height="0" style="pointer-events:none;margin:0 0 8px"></canvas><canvas class="nodisp" width="0" height="0" style="pointer-events:none;margin:0 0 8px"></canvas><div style="pointer-events:none;margin:0 0 8px"></div><canvas class="nodisp" width="0" height="0" style="pointer-events:none;margin:0 0 8px"></canvas><div style="pointer-events:none;font-family:cwTeX-Q-Kai-T,icons2,serif;font-size:400%;">流局</div><div style="pointer-events: none; margin: 32px 8px 16px;"><table width="100%" cellspacing="0" cellpadding="0"><tbody><tr><td rowspan="1" style="width:33%;height:1.2em;font-family:icons2;"><span class="gray">\ue804</span>0 <span class="gray">\ue805</span>0</td><td rowspan="2" style="width:34%;height:2.4em;"><div style="padding:0.2em 0;" class="bbg5"><span style="font-weight:bold;color:#888;">東</span> <span style="font-weight:bold;color:#CCC;">COM</span><br>25000</div></td><td rowspan="1" style="width:33%;height:1.2em;"><span class="gray">四般東喰赤</span></td></tr><tr><td rowspan="2" style="height:2.4em;"><div style="padding:0.2em 0;" class="bbg5"><span style="font-weight:bold;color:#888;">南</span> <span style="font-weight:bold;color:#CCC;">COM</span><br>25000</div></td><td rowspan="2" style="height:2.4em;"><div style="padding:0.2em 0;" class="bbg5"><span style="font-weight:bold;color:#888;">北</span> <span style="font-weight:bold;color:#CCC;">COM</span><br>25000</div></td></tr><tr><td rowspan="2" style="height:2.4em;"><div style="padding:0.2em 0;" class="bbg5"><span style="font-weight:bold;color:#888;">西</span> <span style="font-weight:bold;color:#CCC;">ApplySci</span><br>25000</div></td></tr><tr><td rowspan="1" style="height:1.2em;"></td><td rowspan="1" style="height:1.2em;"></td></tr></tbody></table></div><button class="btn s7" name="c5" style="width:8em;padding:1em;">OK</button></div></div>"
- */
+    let totalLine = '';
+    let nNodes = node.childNodes.length;
+
+    [0, 2, 4].forEach(function (idx) {
+        totalLine += '<td>'
+            + (idx < nNodes ? getVal(node.childNodes[idx]) : '')
+            + '</td>';
+    });
+
+    if (node.childNodes.length > 5) {
+        let score = getVal(node.childNodes[5]);
+        totalLine =  '<tr class="'
+            + (score > 0 ? 'azpsplus' : 'azpsminus')
+            + '">'
+            + totalLine
+            + '<td>'
+            + score;
+    } else {
+        totalLine = '<tr>' + totalLine + '<td>';
+    }
+    return totalLine + '</td></tr>';
+}
+
+function scoreTableT4(node) {
+
+    let table = '<table>';
+    let players = $('.bbg5', node);
+    for (let i=0; i < players.length; i++) {        
+        table += getOneScoreT4(players.eq(i)[0], i);
+    }
+    return table + '</table>';
+
+}
+
+function showExhaustiveDraw(node) {
 
     rememberPlayerName(node);
     let outcome;
+    let block = '<h3>Draw ';
     if (isT4) {
+        outcome = $('table', node);
+        block += /*riichiHonba(outcome) +*/ '</h3>' + scoreTableT4(outcome);
     } else {
         outcome = node.childNodes[0].childNodes[1];
-        let totalLine = '<h3>Draw '
-            + riichiHonba(outcome)
-            + '</h3>'
-            + scoreTable(outcome);
-
-        showResult(totalLine);
-        }
+        block += riichiHonba(outcome) + '</h3>' + scoreTableT3(outcome);
+    }
+    showResult(block);
 }
 
 function showWin(node) {
 
 /*
-"<div class="nopp" style="width: 1008px; height: 756px; transform-origin: 0px 0px 0px; transform: scale(1); font-size: 20.16px; color: rgb(255, 255, 255);"><div class="s0" style="pointer-events: auto; position: absolute; background: rgba(0, 0, 0, 0.9) none repeat scroll 0% 0%; text-align: center; border: 0.8px solid rgb(68, 68, 68); padding: 16px 0px; left: 50%; top: 50%; opacity: 0; transform: translate(-50%, -50%) scale(0.95); width: 70%; height: 70.2646%;"><canvas class="" width="812" height="80" style="pointer-events: none; margin: 0px 0px 8px; width: 649.6px; height: 64px;"></canvas><canvas class="" width="368" height="80" style="pointer-events: none; margin: 0px 0px 8px; width: 294.4px; height: 64px;"></canvas><div style="pointer-events:none;margin:0 0 8px"><table style="width:100%;font-family:cwTeX-Q-Kai-T,icons2,serif;font-size:150%;" cellspacing="0" cellpadding="0"><tbody><tr><td width="50%" valign="top" align="center"><table cellspacing="0" cellpadding="0"><tbody><tr><td align="left"><div class="yk">役牌 白</div></td><td align="left"><div class="hn">　1<span class="gray">飜</span></div></td></tr><tr><td align="left"><div class="yk">ドラ</div></td><td align="left"><div class="hn">　2<span class="gray">飜</span></div></td></tr><tr><td align="left"><div class="yk">赤ドラ</div></td><td align="left"><div class="hn">　2<span class="gray">飜</span></div></td></tr></tbody></table></td></tr></tbody></table></div><canvas class="nodisp" width="0" height="0" style="pointer-events:none;margin:0 0 8px"></canvas><div style="pointer-events: none; font-family: cwTeX-Q-Kai-T, icons2, serif; font-size: 250%;"><span class="gray">滿貫</span>8000<span class="gray">点</span></div><div style="pointer-events: none; margin: 8px 8px 16px;"><table width="100%" cellspacing="0" cellpadding="0"><tbody><tr><td rowspan="1" style="width:33%;height:1.2em;font-family:icons2;"><span class="gray">\ue804</span>0 <span class="gray">\ue805</span>0</td><td rowspan="2" style="width:34%;height:2.4em;"><div style="padding:0.2em 0;" class="bbg5"><span style="font-weight:bold;color:#888;">北</span> <span style="font-weight:bold;color:#CCC;">COM</span><br>25000</div></td><td rowspan="1" style="width:33%;height:1.2em;"><span class="gray">四般東喰赤</span></td></tr><tr><td rowspan="2" style="height:2.4em;"><div style="padding:0.2em 0;" class="bbg5"><span style="font-weight:bold;color:#888;">東</span> <span style="font-weight:bold;color:#CCC;">COM</span><br>25000</div></td><td rowspan="2" style="height:2.4em;"><div style="padding:0.2em 0;" class="bbg5"><span style="font-weight:bold;color:#888;">西</span> <span style="font-weight:bold;color:#CCC;">COM</span><br>25000 <span style="color:#F00;">-8000</span></div></td></tr><tr><td rowspan="2" style="height:2.4em;"><div style="padding:0.2em 0;" class="bbg5"><span style="font-weight:bold;color:#888;">南</span> <span style="font-weight:bold;color:#CCC;">ApplySci</span><br>25000 <span style="color:#0FF;">+8000</span></div></td></tr><tr><td rowspan="1" style="height:1.2em;"></td><td rowspan="1" style="height:1.2em;"></td></tr></tbody></table></div><button class="btn s7" name="c5" style="width:8em;padding:1em;">OK</button></div></div>"
+"<div class="nopp"><div class="s0"><canvas></canvas><canvas></canvas><div>
+<table cellspacing="0" cellpadding="0"><tbody>
+<tr><td width="50%" valign="top" align="center">
+<table cellspacing="0" cellpadding="0"><tbody>
+<tr><td align="left"><div class="yk">役牌 白</div></td><td align="left"><div class="hn">　1<span class="gray">飜</span></div></td></tr>
+<tr><td align="left"><div class="yk">ドラ</div></td><td align="left"><div class="hn">　2<span class="gray">飜</span></div></td></tr>
+<tr><td align="left"><div class="yk">赤ドラ</div></td><td align="left"><div class="hn">　2<span class="gray">飜</span></div></td></tr></tbody></table>
+</td></tr>
+</tbody></table>
+</div>
+<canvas class="nodisp" width="0" height="0"></canvas>
+<div><span class="gray">滿貫</span>8000<span class="gray">点</span></div>
+<div>
+<table width="100%" cellspacing="0" cellpadding="0"><tbody>
+<tr><td rowspan="1"><span class="gray">\ue804</span>0 <span class="gray">\ue805</span>0</td><td rowspan="2"><div class="bbg5"><span>北</span> <span>COM</span><br>25000</div></td><td rowspan="1"><span class="gray">四般東喰赤</span></td></tr>
+<tr><td rowspan="2"><div class="bbg5"><span>東</span> <span>COM</span><br>25000</div></td><td rowspan="2"><div class="bbg5"><span>西</span> <span>COM</span><br>25000 <span>-8000</span></div></td></tr>
+<tr><td rowspan="2"><div class="bbg5"><span>南</span> <span>ApplySci</span><br>25000 <span>+8000</span></div></td></tr>
+<tr><td rowspan="1"></td><td rowspan="1"></td></tr></tbody></table>
+</div><button class="btn s7" name="c5">OK</button></div>
+</div>"
 */
 
     rememberPlayerName(node);
-
+    let totalLine = 'Win!';
+    let nYaku = 0;
+    
     if (isT4) {
         // TODO
     } else {
-        let totalLine = appendNodes(node.children[0])  // score
+        totalLine = appendNodes(node.children[0])  // score
             + '<br>'
             + riichiHonba(node.childNodes[2])
             + '<table>';
@@ -194,7 +249,7 @@ function showWin(node) {
         // get all the yaku
 
         let yakuTable = $("tr:not(:has(table))", node.childNodes[1]);
-        let nYaku = yakuTable.length;
+        nYaku = yakuTable.length;
         yakuTable.each(function (row) {
             let hanCount = getVal(this.childNodes[1]);
             totalLine += '<tr'
@@ -206,11 +261,11 @@ function showWin(node) {
                 + '</td></tr>';
         });
 
-        totalLine += '</table>' + scoreTable(node.childNodes[2]);
-
-        // pause so we don't spoil any uradora surprise
-        setTimeout(() => showResult(totalLine), 500 + nYaku * 1000);
+        totalLine += '</table>' + scoreTableT3(node.childNodes[2]);
     }
+
+    // pause so we don't spoil any uradora surprise
+    setTimeout(() => showResult(totalLine), 500 + nYaku * 1000);
 }
 
 function handleEnd(node) {
