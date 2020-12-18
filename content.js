@@ -20,7 +20,7 @@ const observerSettings = {
 };
 
 function getGamePane() {
-    // check whether we've set the isT4 flag already, and if not, set it to true if we're on tenhou.net/4, else set it to false
+    // flag to indicate whether this is tenhou.net/4
     if (isT4 === undefined) {
         isT4 = window.location.pathname.substring(0,2) === '/4';
     }
@@ -56,7 +56,7 @@ function scorePane() {
         let gamePane = getGamePane();
         if (isT4) {
             gamePane.css('transform' ,'translateX(0)');
-             fontsize = '1em';
+             fontsize = '0.8em';
         } else {
             gamePane
                 .css('margin-left', 10)
@@ -88,15 +88,25 @@ function rememberPlayerName(node) {
     }
 }
 
+function getHandName() {
+    if (isT4) {
+        // this seems ridiculously brittle, but works for now
+        let hand = $('div.nosel > div.nopp > div.nopp > span.gray')
+                .eq(0).parent().find('span').slice(0,2).text();
+        return hand;
+    } else {
+        return 'Hand ' + handNum++;
+    }
+}
+
 function showResult(texts) {
+
     scorePane()
         .prepend($('<div>')
             .html(texts)
-            .prepend($('<h2>').text('Hand ' + handNum))
-            )
+            .prepend($('<h2>').text(getHandName())))
         .prop('scrollTop', 0);
 
-    handNum += 1;
 }
 
 function getVal(node) {
@@ -221,35 +231,26 @@ function yakuLine(yaku, han) {
 
 function showWin(node) {
 
-    /*
-    <tr><td align="left"><div class="yk">役牌 白</div></td><td align="left"><div class="hn">　1<span class="gray">飜</span></div></td></tr>
-
-    <tr><td rowspan="1"><span class="gray">\ue804</span>0 <span class="gray">\ue805</span>0</td><td rowspan="2"><div class="bbg5"><span>北</span> <span>COM</span><br>25000</div></td><td rowspan="1"><span class="gray">四般東喰赤</span></td></tr>
-    <tr><td rowspan="2"><div class="bbg5"><span>東</span> <span>COM</span><br>25000</div></td><td rowspan="2"><div class="bbg5"><span>西</span> <span>COM</span><br>25000 <span>-8000</span></div></td></tr>
-    <tr><td rowspan="2"><div class="bbg5"><span>南</span> <span>ApplySci</span><br>25000 <span>+8000</span></div></td></tr>
-    <tr><td rowspan="1"></td><td rowspan="1"></td></tr>
-    */
-
     rememberPlayerName(node);
     let totalLine = 'Win!';
     let nYaku;
     
     if (isT4) {
-        totalLine = appendNodes($('div.s0 div:eq(1)', node)[0]); // score
+        totalLine = appendNodes($('div.s0 > div:eq(1)', node)[0]); // score
                 //+ '<br>'
                 //+ riichiHonba($('table:eq(1)', node));
                 
         // get the yaku
         
         totalLine += '<table>';
-        let yakuList = $('table:first tr', node);
+        let yakuList = $('table:first table tr', node);
         nYaku = yakuList.length;
-        yakuList.each((row) => totalLine += yakuLine($('.yk', row).text(), $('.hn', row).text()));
+        yakuList.each(function getOneYaku(row) {
+            totalLine += yakuLine($('.yk', this).text(), $('.hn', this).text());
+        });
         totalLine += '</table>';
-        
-        // TODO get the scores
-        
-        totalLine += scoreTableT4($('table:eq(1)', node));
+                
+        totalLine += scoreTableT4($('table .bbg5', node).parents('table:first'));
         
     } else {
         totalLine = appendNodes(node.children[0])  // score
@@ -335,14 +336,6 @@ function checkNode(oneNode) {
         return;
     }
 
-/*
-if (false && oneNode.className.includes('nopp')) {
-        console.log('========================================');
-        console.log(isT4 && testText.length > 20 && testText.substr(0,2) === '役牌');
-        console.log(testText);
-    }
-*/
-
     if (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局') {
 
         handleStart(oneNode);
@@ -357,7 +350,7 @@ if (false && oneNode.className.includes('nopp')) {
     } else if (oneNode.childNodes[0].id === 'total'
         || (isT4 && testText.length > 20 && oneNode.className.includes('nopp')
         ) ) {
-            
+        
         showWin(oneNode);
 
     } else if (
