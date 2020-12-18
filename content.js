@@ -20,6 +20,7 @@ const observerSettings = {
 };
 
 function getGamePane() {
+    
     // flag to indicate whether this is tenhou.net/4
     if (isT4 === undefined) {
         isT4 = window.location.pathname.substring(0,2) === '/4';
@@ -29,19 +30,24 @@ function getGamePane() {
     } else {
         return $('div.nosel > div.nosel.tbl:first');
     }
+    
 }
 
 function setToObserve() {
+    
     mutationObserver.observe(document.documentElement, observerSettings);
+    
 }
 
 chrome.runtime.onMessage.addListener(setToObserve);
 
 function setWidth() {
+    
     let gamePane = getGamePane();
     $('#' + paneID).css({
         'width': $('body').width() - gamePane.width() - 40
     });
+    
 }
 
 function scorePane() {
@@ -68,9 +74,11 @@ function scorePane() {
         setWidth();
     }
     return pane;
+    
 }
 
 function rememberPlayerName(node) {
+    
     if (playerName !== null) {
         return;
     }
@@ -86,45 +94,58 @@ function rememberPlayerName(node) {
             playerName = player[0].childNodes[2].innerText;
         }
     }
+    
 }
 
-function getHandName() {
+function getHandName(node) {
+    
     if (isT4) {
+        let nHonba = getT4ScoreTable(node).find('td:first')[0].childNodes[1].nodeValue.trim();
         // this seems ridiculously brittle, but works for now
-        let hand = $('div.nosel > div.nopp > div.nopp > span.gray')
+        let hand = $('div.nosel > div.nopp > div.nopp > span.gray:first')
                 .eq(0).parent().find('span').slice(0,2).text();
+        if (nHonba !== '0') {
+            hand += '-' + nHonba;
+        }
         return hand;
     } else {
         return 'Hand ' + handNum++;
     }
+    
 }
 
-function showResult(texts) {
+function showResult(texts, handName) {
 
     scorePane()
         .prepend($('<div>')
             .html(texts)
-            .prepend($('<h2>').text(getHandName())))
+            .prepend($('<h2>').text(handName)))
         .prop('scrollTop', 0);
 
 }
 
 function getVal(node) {
+    
     return node.nodeValue || node.innerText;
+    
 }
 
 function appendNodes(fromDom) {
+    
     let toString = '';
     fromDom.childNodes.forEach(function appendOneNode(node) {
         toString += getVal(node) + ' ';
     });
     return toString;
+    
 }
 
 function riichiHonba(node) {
+    
     return '<span class=azpsicons>'
             + $("tr:first td:first", node)[0].innerText
             + '</span>';
+            
 }
 
 function getOneScoreT3(node, player) {
@@ -204,6 +225,10 @@ function scoreTableT4(node) {
 
 }
 
+function getT4ScoreTable(node) {
+    return  $('table .bbg5', node).parents('table:first');
+}
+
 function showExhaustiveDraw(node) {
 
     rememberPlayerName(node);
@@ -211,12 +236,12 @@ function showExhaustiveDraw(node) {
     let block = '<h3>Draw ';
     if (isT4) {
         outcome = $('table', node);
-        block += /*riichiHonba(outcome) +*/ '</h3>' + scoreTableT4(outcome);
+        block += riichiHonba(getT4ScoreTable(node)) + '</h3>' + scoreTableT4(outcome);
     } else {
         outcome = node.childNodes[0].childNodes[1];
         block += riichiHonba(outcome) + '</h3>' + scoreTableT3(outcome);
     }
-    showResult(block);
+    showResult(block, getHandName());
 }
 
 function yakuLine(yaku, han) {
@@ -232,13 +257,16 @@ function yakuLine(yaku, han) {
 function showWin(node) {
 
     rememberPlayerName(node);
-    let totalLine = 'Win!';
+    let totalLine;
     let nYaku;
     
     if (isT4) {
-        totalLine = appendNodes($('div.s0 > div:eq(1)', node)[0]); // score
-                //+ '<br>'
-                //+ riichiHonba($('table:eq(1)', node));
+        
+        let scoreTable = getT4ScoreTable(node);
+        
+        totalLine = appendNodes($('div.s0 > div:eq(1)', node)[0])
+                + '<br>'
+                + riichiHonba(scoreTable);
                 
         // get the yaku
         
@@ -250,9 +278,10 @@ function showWin(node) {
         });
         totalLine += '</table>';
                 
-        totalLine += scoreTableT4($('table .bbg5', node).parents('table:first'));
+        totalLine += scoreTableT4(scoreTable);
         
     } else {
+        
         totalLine = appendNodes(node.children[0])  // score
             + '<br>'
             + riichiHonba(node.childNodes[2]);
@@ -271,8 +300,9 @@ function showWin(node) {
         totalLine += scoreTableT3(node.childNodes[2]);
     }
 
+    let handName = getHandName();
     // pause so we don't spoil any uradora surprise
-    setTimeout(() => showResult(totalLine), 500 + nYaku * 1000);
+    setTimeout(() => showResult(totalLine, handName), 500 + nYaku * 1000);
 }
 
 function handleEnd(node) {
@@ -320,7 +350,7 @@ function showAbortiveDraw(node) {
         + riichiHonba(outcome)
         + '</h3>';
 
-    showResult(totalLine);
+    showResult(totalLine, getHandName());
 }
 
 function handleStart(node) {
