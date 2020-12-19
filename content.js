@@ -245,8 +245,9 @@ function showExhaustiveDraw(node) {
 }
 
 function yakuLine(yaku, han) {
+    han = han.trimLeft();
     return '<tr'
-        + ((han.trimLeft()[0] === '0') ? ' class=azpsgrey' : '')
+        + ((han.length > 0 && han[0] === '0') ? ' class=azpsgrey' : '')
         + '><td>'
         + yaku
         + '</td><td>'
@@ -274,7 +275,7 @@ function showWin(node) {
         let yakuList = $('table:first table tr', node);
         nYaku = yakuList.length;
         yakuList.each(function getOneYaku(row) {
-            totalLine += yakuLine($('.yk', this).text(), $('.hn', this).text());
+            totalLine += yakuLine($('.yk,.ym', this).text(), $('.hn', this).text());
         });
         totalLine += '</table>';
                 
