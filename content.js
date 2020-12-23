@@ -47,6 +47,21 @@ function setWidth() {
     $('#' + paneID).css({
         'width': $('body').width() - gamePane.width() - 40
     });
+    moveMainPane();
+    
+}
+
+function moveMainPane() {
+
+    let gamePane = getGamePane();
+    if (isT4) {
+        gamePane.css('transform' ,'translateX(0)');
+    } else {
+        gamePane
+            .css('margin-left', 10)
+            .next()
+                .css('left', 0);
+    }
     
 }
 
@@ -55,20 +70,9 @@ function scorePane() {
     // if our score pane isn't present, create it
 
     let pane = $('#' + paneID);
-    let fontsize = '0.5em';
+    let fontsize = isT4 ? '0.8em' : '0.5em';
 
     if (pane.length === 0) {
-
-        let gamePane = getGamePane();
-        if (isT4) {
-            gamePane.css('transform' ,'translateX(0)');
-             fontsize = '0.8em';
-        } else {
-            gamePane
-                .css('margin-left', 10)
-                .next()
-                    .css('left', 0);
-        }
         pane = $('<div>').prop('id', paneID).css('fontSize', fontsize);
         $('body').append(pane);
         setWidth();
