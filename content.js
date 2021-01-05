@@ -48,18 +48,7 @@ function resetGraphData() {
                 fill: false,
                 borderColor: "red"
             }]
-        }/*,
-        options: {
-            scales: {
-                yAxes: [{
-                    ticks: {
-                        callback: function(value, index, values) {
-                            return '' + value/1000 + 'k';
-                        }
-                    }
-                }]
-            }
-        }*/
+        }
     };
 }
 
@@ -137,14 +126,14 @@ function rememberPlayerName(node) {
     }
     let players;
     if (isT4) {
-        players = $('.bbg5', node);
-        let me = players.eq(players.length - 1);
+        players = $('.bbg5 > span:eq(1)', node);
+        let me = players.slice(-1)[0];
         if (me.length) {
-            playerName = me.children('span:eq(1)').text();
+            playerName = player[0].innerText;
         }
         for (let i=0; i < players.length; i++) {
-            if (players.eq(i).length) {
-                graphData.data.datasets[i].label = players.eq(i).text();
+            if (players[i].length) {
+                graphData.data.datasets[i].label = players[i].innerText;
             }
         }
     } else {
@@ -259,7 +248,7 @@ function scoreTableT3(node) {
     let totalLine = '<table>';
     let nPlayers = 3 + ($('#sc3', node).length ? 1 : 0);
     Array.from(new Array(nPlayers).keys()).forEach(function (i) {
-        totalLine += getOneScore($('#sc' + i, node)[0], i);
+        totalLine += getOneScore($('#sc' + player, node)[0], i);
     });
     return totalLine + '</table>';
 
@@ -365,7 +354,7 @@ function handleEnd(node) {
     let chartEl = $('<canvas>').addClass('chart');
     pane.prepend(chartEl);
     chartEl.height = Math.ceil(pane.width * 0.7);
-    let dummy = Chart(chartEl[0], graphData);
+    const chart = new Chart(chartEl[0], graphData);
 
     let winner;
     if (isT4) {
