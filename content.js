@@ -213,7 +213,7 @@ function showResult(texts, handName, node, hide) {
         tiles.height = Math.ceil(newHeight);
         tiles.getContext('2d').drawImage(source[0], 0, 0, tiles.width, newHeight);
     }
-    newEl.prepend($('<h2>').text(handName));
+    newEl.prepend($('<h2>').text(handName).attr('id', 'azps_' + handName.replace(' ', '_')));
     return newEl;
 }
 
@@ -383,7 +383,7 @@ function showWin(node) {
     if (handName !== false) {
         graphData.data.labels.push(handName);
         let scoreDiv = showResult(totalLine, handName, node, true);
-        // pause so we don't spoil any uradora surprise
+        // pause before revealing the scores, so that we don't spoil any uradora surprise
         setTimeout(() => scoreDiv.removeClass('hidden'), 500 + nYaku * 1000);
     }
 }
@@ -394,6 +394,13 @@ function handleEnd(node) {
     pane.prepend(chartEl);
     chartEl.height = Math.ceil(pane.width * 0.6);
     const chart = new Chart(chartEl[0], graphData);
+
+    chartEl.click(function clickChart(evt){ 
+        const activeXPoints = chart.getElementsAtXAxis(evt); // or chart.getElementAtEvent(evt);
+        const itemIndex = activePoint[0]._index;
+        // id = 'azps_' + handName.replace(' ', '_')
+        debugger;
+    });
 
     let winner;
     if (isT4) {
