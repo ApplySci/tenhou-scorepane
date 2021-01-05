@@ -1,7 +1,7 @@
 /*jshint esversion:6, -W014 */
-/*jslint single, browser, fudge, this */
-/*global jQuery, window, chrome, MutationObserver, console */
+/*global jQuery, window, chrome, MutationObserver, console, Chart */
 
+// try to grab tiles from winning screen from canvas and put in base64 data:// item in scorepane
 (function () {
 "use strict";
 
@@ -10,6 +10,7 @@ let $ = jQuery;
 let handNum = 1;
 let playerName = null;
 let isT4;
+let graphData = {};
 
 const paneID = 'azpspane';
 
@@ -18,6 +19,49 @@ const observerSettings = {
     childList: true,
     subtree: true
 };
+
+Chart.defaults.line.borderWidth = 4;
+
+function resetGraphData() {
+    graphData = {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'A',
+                data: [ ],
+                fill: false,
+                borderColor: "blue"
+            }, {
+                label: 'B',
+                data: [ ],
+                fill: false,
+                borderColor: "green"
+            }, {
+                label: 'C',
+                data: [ ],
+                fill: false,
+                borderColor: "yellow"
+            }, {
+                label: 'D',
+                data: [ ],
+                fill: false,
+                borderColor: "red"
+            }]
+        }/*,
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return '' + value/1000 + 'k';
+                        }
+                    }
+                }]
+            }
+        }*/
+    };
+}
 
 function getGamePane() {
     
@@ -65,6 +109,10 @@ function moveMainPane() {
     
 }
 
+function scorePaneInit() {
+    $('<h3>').text('The ApplySci Tenhou Score Pane').appendTo('#' + paneID);
+}
+
 function scorePane() {
 
     // if our score pane isn't present, create it
@@ -76,6 +124,7 @@ function scorePane() {
         pane = $('<div>').prop('id', paneID).css('fontSize', fontsize);
         $('body').append(pane);
         setWidth();
+        scorePaneInit();
     }
     return pane;
     
@@ -86,16 +135,25 @@ function rememberPlayerName(node) {
     if (playerName !== null) {
         return;
     }
-    let player;
+    let players;
     if (isT4) {
-        player = $('.bbg5:last > span:eq(1)', node);
-        if (player.length) {
-            playerName = player[0].innerText;
+        players = $('.bbg5 > span:eq(1)', node);
+        let me = players.slice(-1)[0];
+        if (me.length) {
+            playerName = me.innerText;
+        }
+        for (let i=0; i < players.length; i++) {
+            if (players[i].length) {
+                graphData.data.datasets[i].label = players[i].innerText;
+            }
         }
     } else {
-        player = $('#sc0', node);
+        let player = $('#sc0', node);
         if (player.length) {
             playerName = player[0].childNodes[2].innerText;
+            for (let i=0; i<4; i++) {
+                graphData.data.datasets[i].label = player[i].childNodes[2].innerText;
+            }
         }
     }
     
@@ -104,13 +162,18 @@ function rememberPlayerName(node) {
 function getHandName(node) {
     
     if (isT4) {
-        let nHonba = getT4ScoreTable(node).find('td:first')[0].childNodes[1].nodeValue.trim();
+        let honbaString = getT4ScoreTable(node).find('td:first')[0].childNodes[1].nodeValue;
+        if (honbaString === null) {
+            return false;
+        }
+        let nHonba =  honbaString.trim();
         // this seems ridiculously brittle, but works for now
         let hand = $('div.nosel > div.nopp > div.nopp > span.gray:first')
                 .eq(0).parent().find('span').slice(0,2).text();
         if (nHonba !== '0') {
             hand += '-' + nHonba;
         }
+        handNum++;
         return hand;
     } else {
         return 'Hand ' + handNum++;
@@ -118,13 +181,19 @@ function getHandName(node) {
     
 }
 
-function showResult(texts, handName) {
+function showResult(texts, handName, node) {
 
-    scorePane()
-        .prepend($('<div>')
-            .html(texts)
-            .prepend($('<h2>').text(handName)))
-        .prop('scrollTop', 0);
+    let newEl = $('<div>').html(texts);
+    scorePane().prepend(newEl).prop('scrollTop', 0);
+    if (node !== null && isT4) {
+        let source = $('canvas:first', node);
+        let tiles = document.createElement('canvas');
+        newEl.prepend(tiles);
+        let newHeight = source.height() * tiles.width / source.width(); 
+        tiles.height = Math.ceil(newHeight);
+        tiles.getContext('2d').drawImage(source[0], 0, 0, tiles.width, newHeight);
+    }
+    newEl.prepend($('<h2>').text(handName));
 
 }
 
@@ -152,51 +221,14 @@ function riichiHonba(node) {
             
 }
 
-function getOneScoreT3(node, player) {
+function getOneScore(node, player) {
 
-        // #scN has childNodes containing:
-        // wind, space, name, space, total score, [optional: delta]
-
-        let totalLine = '';
-        let el = $('#sc' + player, node)[0];
-        let nNodes = el.childNodes.length;
-
-        [0, 2, 4].forEach(function (idx) {
-            totalLine += '<td>'
-                + (idx < nNodes ? getVal(el.childNodes[idx]) : '')
-                + '</td>';
-        });
-
-        if (el.childNodes.length > 5) {
-            let score = getVal(el.childNodes[5]);
-            totalLine =  '<tr class="'
-                + (score > 0 ? 'azpsplus' : 'azpsminus')
-                + '">'
-                + totalLine
-                + '<td>'
-                + score;
-        } else {
-            totalLine = '<tr>' + totalLine + '<td>';
-        }
-        return totalLine + '</td></tr>';
-}
-
-function scoreTableT3(node) {
-
-    let totalLine = '<table>';
-    let nPlayers = 3 + ($('#sc3', node).length ? 1 : 0);
-    Array.from(new Array(nPlayers).keys()).forEach(function (i) {
-        totalLine += getOneScoreT3(node, i);
-    });
-    return totalLine + '</table>';
-
-}
-
-function getOneScoreT4(node, player) {
-    // <div class="bbg5"><span>東</span> <span>COM</span><br>25000</div>
+        // T3: #scN wind, space, name, space, total score, [optional: delta]
+        // T4: <div class="bbg5"><span>東</span> <span>COM</span><br>25000</div>
 
     let totalLine = '';
     let nNodes = node.childNodes.length;
+    let score = 0;
 
     [0, 2, 4].forEach(function (idx) {
         totalLine += '<td>'
@@ -204,8 +236,9 @@ function getOneScoreT4(node, player) {
             + '</td>';
     });
 
+    
     if (node.childNodes.length > 5) {
-        let score = getVal(node.childNodes[5]);
+        score = getVal(node.childNodes[5]);
         totalLine =  '<tr class="'
             + (score > 0 ? 'azpsplus' : 'azpsminus')
             + '">'
@@ -215,15 +248,30 @@ function getOneScoreT4(node, player) {
     } else {
         totalLine = '<tr>' + totalLine + '<td>';
     }
+    if (nNodes >= 5) {
+        graphData.data.datasets[player].data.push(parseFloat(getVal(node.childNodes[4])) + parseFloat(score));
+    }
     return totalLine + '</td></tr>';
+}
+
+function scoreTableT3(node) {
+
+    let totalLine = '<table>';
+    let nPlayers = 3 + ($('#sc3', node).length ? 1 : 0);
+    Array.from(new Array(nPlayers).keys()).forEach(function (i) {
+        totalLine += getOneScore($('#sc' + i, node)[0], i);
+    });
+    return totalLine + '</table>';
+
 }
 
 function scoreTableT4(node) {
 
+    graphData.data.labels.push(handNum);
     let table = '<table>';
     let players = $('.bbg5', node);
     for (let i=0; i < players.length; i++) {        
-        table += getOneScoreT4(players.eq(i)[0], i);
+        table += getOneScore(players.eq(i)[0], i);
     }
     return table + '</table>';
 
@@ -245,7 +293,7 @@ function showExhaustiveDraw(node) {
         outcome = node.childNodes[0].childNodes[1];
         block += riichiHonba(outcome) + '</h3>' + scoreTableT3(outcome);
     }
-    showResult(block, getHandName());
+    showResult(block, getHandName(), null);
 }
 
 function yakuLine(yaku, han) {
@@ -306,11 +354,18 @@ function showWin(node) {
     }
 
     let handName = getHandName();
-    // pause so we don't spoil any uradora surprise
-    setTimeout(() => showResult(totalLine, handName), 500 + nYaku * 1000);
+    if (handName !== false) {
+        // pause so we don't spoil any uradora surprise
+        setTimeout(() => showResult(totalLine, handName, node), 500 + nYaku * 1000);
+    }
 }
 
 function handleEnd(node) {
+    let pane = $('#'+paneID);
+    let chartEl = $('<canvas>').addClass('chart');
+    pane.prepend(chartEl);
+    chartEl.height = Math.ceil(pane.width * 0.7);
+    let dummy = Chart(chartEl[0], graphData);
 
     let winner;
     if (isT4) {
@@ -355,12 +410,14 @@ function showAbortiveDraw(node) {
         + riichiHonba(outcome)
         + '</h3>';
 
-    showResult(totalLine, getHandName());
+    showResult(totalLine, getHandName(), null);
 }
 
 function handleStart(node) {
     handNum = 1;
+    resetGraphData();
     scorePane().empty();
+    scorePaneInit();
     rememberPlayerName(node);
 }
 
@@ -422,7 +479,6 @@ function onMutate(mutations) {
                         checkNode(node);
                     }
                 } catch (e) {
-                    debugger;
                     console.log(e);
                 }
             });
@@ -432,6 +488,8 @@ function onMutate(mutations) {
 }
 
 // This is what happens when the page is first loaded
+
+Chart.platform.disableCSSInjection = true;
 
 chrome.storage.local.get(null, function(options) {
     getGamePane(); // ensure isT4 is set
