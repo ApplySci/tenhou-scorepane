@@ -122,7 +122,11 @@ function moveMainPane() {
 }
 
 function scorePaneInit() {
-    $('<h3>').text('The ApplySci Tenhou Score Pane').appendTo('#' + paneID);
+    $('#' + paneID)
+        .append($('<div>')
+            .addClass('hands')
+            .append($('<h3>').text('The ApplySci Tenhou Score Pane'))
+        );
 }
 
 function scorePane() {
@@ -204,7 +208,7 @@ function showResult(texts, handName, node, hide) {
     if (hide) {
         newEl.addClass('hidden');
     }
-    scorePane().prepend(newEl).prop('scrollTop', 0);
+    $('div.hands', scorePane()).prepend(newEl).prop('scrollTop', 0);
     if (node !== null && isT4) {
         let source = $('canvas:first', node);
         let tiles = document.createElement('canvas');
@@ -394,12 +398,13 @@ function handleEnd(node) {
     pane.prepend(chartEl);
     chartEl.height = Math.ceil(pane.width * 0.6);
     const chart = new Chart(chartEl[0], graphData);
+    $('div.hands', pane).css('top', chartEl.offset().top + chartEl.outerHeight(true) + 10);
 
     chartEl.click(function clickChart(evt){ 
         const activeXPoints = chart.getElementsAtXAxis(evt); // or chart.getElementAtEvent(evt);
-        const itemIndex = activePoint[0]._index;
-        // id = 'azps_' + handName.replace(' ', '_')
+        let id = 'azps_' + graphData.data.labels[activeXPoints[0]._index].replace(' ', '_');
         debugger;
+        document.getElementById(id).scrollIntoView();
     });
 
     let winner;
