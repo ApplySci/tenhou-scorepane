@@ -245,6 +245,15 @@ function riichiHonba(node) {
 
 }
 
+function chartOneScore(player, totalScore, score) {
+
+    if (graphData.data.datasets[player].data.length === 0) {
+        graphData.data.datasets[player].data.push(totalScore);
+    }
+    graphData.data.datasets[player].data.push(totalScore + parseFloat(score));
+
+}
+
 function getOneScore(node, player) {
 
     // T3: #scN wind, space, name, space, total score, [optional: delta]
@@ -274,10 +283,7 @@ function getOneScore(node, player) {
     }
     let totalScore = parseFloat(getVal(node.childNodes[4]));
     if (nNodes >= 5) {
-        if (graphData.data.datasets[player].data.length === 0) {
-            graphData.data.datasets[player].data.push(totalScore);
-        }
-        graphData.data.datasets[player].data.push(totalScore + parseFloat(score));
+        chartOneScore(player, totalScore, score);
     }
     return totalLine + '</td></tr>';
 }
@@ -305,11 +311,13 @@ function scoreTableT4(node) {
 }
 
 function getT4ScoreTable(node) {
+
     return  $('table .bbg5', node).parents('table:first');
+
 }
 
 function showExhaustiveDraw(node) {
-    // TODO handle this for the charts, too
+
     rememberPlayerName(node);
     let outcome;
     let block = '<h3>Draw ';
@@ -320,10 +328,14 @@ function showExhaustiveDraw(node) {
         outcome = node.childNodes[0].childNodes[1];
         block += riichiHonba(outcome) + '</h3>' + scoreTableT3(outcome);
     }
-    showResult(block, getHandName(), null, false);
+    let handName = getHandName();
+    graphData.data.labels.push(handName);
+    showResult(block, handName, null, false);
+
 }
 
 function yakuLine(yaku, han) {
+
     han = han.trimLeft();
     return '<tr'
         + ((han.length > 0 && han[0] === '0') ? ' class=azpsgrey' : '')
@@ -332,6 +344,7 @@ function yakuLine(yaku, han) {
         + '</td><td>'
         + han
         + '</td></tr>';
+
 }
 
 function showWin(node) {
