@@ -137,14 +137,14 @@ function rememberPlayerName(node) {
     }
     let players;
     if (isT4) {
-        players = $('.bbg5 > span:eq(1)', node);
-        let me = players.slice(-1)[0];
+        players = $('.bbg5', node);
+        let me = players.eq(players.length - 1);
         if (me.length) {
-            playerName = me.innerText;
+            playerName = me.children('span:eq(1)').text();
         }
         for (let i=0; i < players.length; i++) {
-            if (players[i].length) {
-                graphData.data.datasets[i].label = players[i].innerText;
+            if (players.eq(i).length) {
+                graphData.data.datasets[i].label = players.eq(i).text();
             }
         }
     } else {
