@@ -20,13 +20,11 @@ const observerSettings = {
     subtree: true
 };
 
-Chart.defaults.line.borderWidth = 4;
-
 function resetGraphData() {
     graphData = {
         type: 'line',
         data: {
-            labels: [],
+            labels: [0],
             datasets: [{
                 label: 'A',
                 data: [ ],
@@ -48,12 +46,32 @@ function resetGraphData() {
                 fill: false,
                 borderColor: "red"
             }]
+        },
+        options: {
+            elements: {
+                line: {
+                    borderWidth: 5,
+                    cubicInterpolationMode: 'monotone',
+                    lineTension: 0,
+                    spanGaps: true,
+                    steppedLine: true
+                }
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return '' + value/1000 + 'k';
+                        }
+                    }
+                }]
+            }
         }
     };
 }
 
 function getGamePane() {
-    
+
     // flag to indicate whether this is tenhou.net/4
     if (isT4 === undefined) {
         isT4 = window.location.pathname.substring(0,2) === '/4';
@@ -63,25 +81,25 @@ function getGamePane() {
     } else {
         return $('div.nosel > div.nosel.tbl:first');
     }
-    
+
 }
 
 function setToObserve() {
-    
+
     mutationObserver.observe(document.documentElement, observerSettings);
-    
+
 }
 
 chrome.runtime.onMessage.addListener(setToObserve);
 
 function setWidth() {
-    
+
     let gamePane = getGamePane();
     $('#' + paneID).css({
         'width': $('body').width() - gamePane.width() - 40
     });
     moveMainPane();
-    
+
 }
 
 function moveMainPane() {
@@ -95,7 +113,7 @@ function moveMainPane() {
             .next()
                 .css('left', 0);
     }
-    
+
 }
 
 function scorePaneInit() {
@@ -116,40 +134,38 @@ function scorePane() {
         scorePaneInit();
     }
     return pane;
-    
+
 }
 
 function rememberPlayerName(node) {
-    
+
     if (playerName !== null) {
         return;
     }
     let players;
     if (isT4) {
-        players = $('.bbg5 > span:eq(1)', node);
-        let me = players.slice(-1)[0];
+        players = $('.bbg5', node);
+        let me = players.eq(players.length - 1);
         if (me.length) {
-            playerName = player[0].innerText;
+            playerName = me.children('span:eq(1)').text();
         }
         for (let i=0; i < players.length; i++) {
-            if (players[i].length) {
-                graphData.data.datasets[i].label = players[i].innerText;
-            }
+            graphData.data.datasets[i].label =  decodeURIComponent(players.eq(i).children('span:eq(1)').text()); 
         }
     } else {
         let player = $('#sc0', node);
         if (player.length) {
             playerName = player[0].childNodes[2].innerText;
             for (let i=0; i<4; i++) {
-                graphData.data.datasets[i].label = player[i].childNodes[2].innerText;
+                graphData.data.datasets[i].label = decodeURIComponent(player[i].childNodes[2].innerText);
             }
         }
     }
-    
+
 }
 
 function getHandName(node) {
-    
+
     if (isT4) {
         let honbaString = getT4ScoreTable(node).find('td:first')[0].childNodes[1].nodeValue;
         if (honbaString === null) {
@@ -167,7 +183,7 @@ function getHandName(node) {
     } else {
         return 'Hand ' + handNum++;
     }
-    
+
 }
 
 function showResult(texts, handName, node) {
@@ -178,7 +194,7 @@ function showResult(texts, handName, node) {
         let source = $('canvas:first', node);
         let tiles = document.createElement('canvas');
         newEl.prepend(tiles);
-        let newHeight = source.height() * tiles.width / source.width(); 
+        let newHeight = source.height() * tiles.width / source.width();
         tiles.height = Math.ceil(newHeight);
         tiles.getContext('2d').drawImage(source[0], 0, 0, tiles.width, newHeight);
     }
@@ -187,33 +203,33 @@ function showResult(texts, handName, node) {
 }
 
 function getVal(node) {
-    
+
     return node.nodeValue || node.innerText;
-    
+
 }
 
 function appendNodes(fromDom) {
-    
+
     let toString = '';
     fromDom.childNodes.forEach(function appendOneNode(node) {
         toString += getVal(node) + ' ';
     });
     return toString;
-    
+
 }
 
 function riichiHonba(node) {
-    
+
     return '<span class=azpsicons>'
             + $("tr:first td:first", node)[0].innerText
             + '</span>';
-            
+
 }
 
 function getOneScore(node, player) {
 
-        // T3: #scN wind, space, name, space, total score, [optional: delta]
-        // T4: <div class="bbg5"><span>東</span> <span>COM</span><br>25000</div>
+    // T3: #scN wind, space, name, space, total score, [optional: delta]
+    // T4: <div class="bbg5"><span>東</span> <span>COM</span><br>25000</div>
 
     let totalLine = '';
     let nNodes = node.childNodes.length;
@@ -225,7 +241,7 @@ function getOneScore(node, player) {
             + '</td>';
     });
 
-    
+
     if (node.childNodes.length > 5) {
         score = getVal(node.childNodes[5]);
         totalLine =  '<tr class="'
@@ -237,8 +253,12 @@ function getOneScore(node, player) {
     } else {
         totalLine = '<tr>' + totalLine + '<td>';
     }
+    let totalScore = parseFloat(getVal(node.childNodes[4]));
     if (nNodes >= 5) {
-        graphData.data.datasets[player].data.push(parseFloat(getVal(node.childNodes[4])) + parseFloat(score));
+        if (graphData.data.datasets[player].data.length === 0) {
+            graphData.data.datasets[player].data.push(totalScore);
+        }
+        graphData.data.datasets[player].data.push(totalScore + parseFloat(score));
     }
     return totalLine + '</td></tr>';
 }
@@ -248,7 +268,7 @@ function scoreTableT3(node) {
     let totalLine = '<table>';
     let nPlayers = 3 + ($('#sc3', node).length ? 1 : 0);
     Array.from(new Array(nPlayers).keys()).forEach(function (i) {
-        totalLine += getOneScore($('#sc' + player, node)[0], i);
+        totalLine += getOneScore($('#sc' + i, node)[0], i);
     });
     return totalLine + '</table>';
 
@@ -256,10 +276,9 @@ function scoreTableT3(node) {
 
 function scoreTableT4(node) {
 
-    graphData.data.labels.push(handNum);
-    let table = '<table>';
     let players = $('.bbg5', node);
-    for (let i=0; i < players.length; i++) {        
+    let table = '<table>';
+    for (let i=0; i < players.length; i++) {
         table += getOneScore(players.eq(i)[0], i);
     }
     return table + '</table>';
@@ -271,7 +290,7 @@ function getT4ScoreTable(node) {
 }
 
 function showExhaustiveDraw(node) {
-
+    // TODO handle this for the charts, too
     rememberPlayerName(node);
     let outcome;
     let block = '<h3>Draw ';
@@ -301,17 +320,20 @@ function showWin(node) {
     rememberPlayerName(node);
     let totalLine;
     let nYaku;
-    
+
     if (isT4) {
-        
+
+        if ($('.yk,.ym',node).length === 0) {
+            return;
+        }
         let scoreTable = getT4ScoreTable(node);
-        
+
         totalLine = appendNodes($('div.s0 > div:eq(1)', node)[0])
                 + '<br>'
                 + riichiHonba(scoreTable);
-                
+
         // get the yaku
-        
+
         totalLine += '<table>';
         let yakuList = $('table:first table tr', node);
         nYaku = yakuList.length;
@@ -319,11 +341,11 @@ function showWin(node) {
             totalLine += yakuLine($('.yk,.ym', this).text(), $('.hn', this).text());
         });
         totalLine += '</table>';
-                
+
         totalLine += scoreTableT4(scoreTable);
-        
+
     } else {
-        
+
         totalLine = appendNodes(node.children[0])  // score
             + '<br>'
             + riichiHonba(node.childNodes[2]);
@@ -337,14 +359,17 @@ function showWin(node) {
             totalLine += yakuLine(getVal(this.childNodes[0]), getVal(this.childNodes[1]));
         });
         totalLine += '</table>';
-        
+
         // get the scores
         totalLine += scoreTableT3(node.childNodes[2]);
     }
 
+    graphData.data.labels.push(handNum);
+
     let handName = getHandName();
     if (handName !== false) {
         // pause so we don't spoil any uradora surprise
+        // TODO  instead of timing out the creation of the DIV, create it immediately with display:none, and then display after timeout
         setTimeout(() => showResult(totalLine, handName, node), 500 + nYaku * 1000);
     }
 }
@@ -353,7 +378,7 @@ function handleEnd(node) {
     let pane = $('#'+paneID);
     let chartEl = $('<canvas>').addClass('chart');
     pane.prepend(chartEl);
-    chartEl.height = Math.ceil(pane.width * 0.7);
+    chartEl.height = Math.ceil(pane.width * 0.6);
     const chart = new Chart(chartEl[0], graphData);
 
     let winner;
@@ -417,42 +442,43 @@ function checkNode(oneNode) {
         return;
     }
 
-    if (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局') {
+    if (oneNode.className === 'nopp' && (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局')) {
 
+        // TODO check this in T3 - probably doesn't work any more, but that className check is needed for T4
         handleStart(oneNode);
 
     } else if (testText.length > 10
         && (testText.substr(0,6) === 'Redeal' || testText.substr(0,2) === '流局')
         && (oneNode.className === 'tbc' || (isT4 && oneNode.className.includes('nopp')))
         ) {
-            
+
         showExhaustiveDraw(oneNode);
 
     } else if (oneNode.childNodes[0].id === 'total'
         || (isT4 && testText.length > 20 && oneNode.className.includes('nopp')
         ) ) {
-        
+
         showWin(oneNode);
 
     } else if (
         (oneNode.className === 'tbc' || isT4)
         && (testText.substr(0,2) === '終局' || testText.substr(0,3) === 'End')
         ) {
-            
+
         handleEnd(oneNode);
 
     } else if ((oneNode.className === 'tbc'
             && $('#sc0', oneNode).length
             && $('table', oneNode).length === 1)
         ) {
-            
+
         showAbortiveDraw(oneNode);
 
     } else if ($('#' + paneID).length && (
-            $('#pane1', oneNode).length 
+            $('#pane1', oneNode).length
             || (isT4 && oneNode.className.includes('s0') && testText.includes('Online:'))
         ) ) {
-            
+
         removePane();
 
     }
