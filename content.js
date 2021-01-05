@@ -158,11 +158,12 @@ function rememberPlayerName(node) {
     } else {
         let player = $('#sc0', node);
         if (player.length) {
-            playerName = player[0].childNodes[2].innerText;
-            for (let i=0; i<4; i++) {
+            playerName = player[0].childNodes[3].innerText;
+            graphData.data.datasets[graphData.data.datasets.length - 1].label = decodeURIComponent(playerName);
+            for (let i=1; i<4; i++) {
                 player = $('#sc'+i, node);
                 if (player.length > 0) {
-                    graphData.data.datasets[i].label = decodeURIComponent(player.childNodes[2].innerText);
+                    graphData.data.datasets[i-1].label = decodeURIComponent(player[0].childNodes[3].innerText);
                 }
             }
         }
@@ -451,9 +452,9 @@ function checkNode(oneNode) {
         return;
     }
 
-    if (oneNode.className === 'nopp' && (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局')) {
+    if (oneNode.className === (isT4 ? 'nopp' : 'tbc') && 
+        (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局')) {
 
-        // TODO check this in T3 - probably doesn't work any more, but the className check is needed for T4
         handleStart(oneNode);
 
     } else if (testText.length > 10
