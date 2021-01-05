@@ -13,6 +13,10 @@
     padding-bottom: 1em;
 }
 
+#azpspane .hidden {
+    display: none;
+}
+
 #azpspane > div:nth-child(2) {
     background-color: #111;
 }

@@ -1,7 +1,6 @@
 /*jshint esversion:6, -W014 */
 /*global jQuery, window, chrome, MutationObserver, console, Chart */
 
-// try to grab tiles from winning screen from canvas and put in base64 data:// item in scorepane
 (function () {
 "use strict";
 
@@ -29,28 +28,29 @@ function resetGraphData() {
                 label: 'A',
                 data: [ ],
                 fill: false,
-                borderColor: "blue"
+                borderColor: "#A00",
             }, {
                 label: 'B',
                 data: [ ],
                 fill: false,
-                borderColor: "green"
+                borderColor: "#22F"
             }, {
                 label: 'C',
                 data: [ ],
                 fill: false,
-                borderColor: "yellow"
+                borderColor: "#3F3"
             }, {
                 label: 'D',
                 data: [ ],
                 fill: false,
-                borderColor: "red"
+                borderColor: "#FF3",
+                borderWidth: 6
             }]
         },
         options: {
             elements: {
                 line: {
-                    borderWidth: 5,
+                    borderWidth: 3,
                     cubicInterpolationMode: 'monotone',
                     lineTension: 0,
                     spanGaps: true,
@@ -146,18 +146,24 @@ function rememberPlayerName(node) {
     if (isT4) {
         players = $('.bbg5', node);
         let me = players.eq(players.length - 1);
+        if (players.length === 3 && graphData.data.datasets.length === 4) {
+            graphData.data.datasets.splice(2,1); // remove the green line for sanma
+        }
         if (me.length) {
             playerName = me.children('span:eq(1)').text();
-        }
+        }        
         for (let i=0; i < players.length; i++) {
-            graphData.data.datasets[i].label =  decodeURIComponent(players.eq(i).children('span:eq(1)').text()); 
+            graphData.data.datasets[i].label = decodeURIComponent(players.eq(i).children('span:eq(1)').text()); 
         }
     } else {
         let player = $('#sc0', node);
         if (player.length) {
             playerName = player[0].childNodes[2].innerText;
             for (let i=0; i<4; i++) {
-                graphData.data.datasets[i].label = decodeURIComponent(player[i].childNodes[2].innerText);
+                player = $('#sc'+i, node);
+                if (player.length > 0) {
+                    graphData.data.datasets[i].label = decodeURIComponent(player.childNodes[2].innerText);
+                }
             }
         }
     }
@@ -186,9 +192,12 @@ function getHandName(node) {
 
 }
 
-function showResult(texts, handName, node) {
+function showResult(texts, handName, node, hide) {
 
     let newEl = $('<div>').html(texts);
+    if (hide) {
+        newEl.addClass('hidden');
+    }
     scorePane().prepend(newEl).prop('scrollTop', 0);
     if (node !== null && isT4) {
         let source = $('canvas:first', node);
@@ -199,7 +208,7 @@ function showResult(texts, handName, node) {
         tiles.getContext('2d').drawImage(source[0], 0, 0, tiles.width, newHeight);
     }
     newEl.prepend($('<h2>').text(handName));
-
+    return newEl;
 }
 
 function getVal(node) {
@@ -301,7 +310,7 @@ function showExhaustiveDraw(node) {
         outcome = node.childNodes[0].childNodes[1];
         block += riichiHonba(outcome) + '</h3>' + scoreTableT3(outcome);
     }
-    showResult(block, getHandName(), null);
+    showResult(block, getHandName(), null, false);
 }
 
 function yakuLine(yaku, han) {
@@ -368,9 +377,9 @@ function showWin(node) {
 
     let handName = getHandName();
     if (handName !== false) {
+        let scoreDiv = showResult(totalLine, handName, node, true);
         // pause so we don't spoil any uradora surprise
-        // TODO  instead of timing out the creation of the DIV, create it immediately with display:none, and then display after timeout
-        setTimeout(() => showResult(totalLine, handName, node), 500 + nYaku * 1000);
+        setTimeout(() => scoreDiv.removeClass('hidden'), 500 + nYaku * 1000);
     }
 }
 
@@ -424,7 +433,7 @@ function showAbortiveDraw(node) {
         + riichiHonba(outcome)
         + '</h3>';
 
-    showResult(totalLine, getHandName(), null);
+    showResult(totalLine, getHandName(), null, false);
 }
 
 function handleStart(node) {
