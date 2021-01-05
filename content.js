@@ -160,9 +160,9 @@ function rememberPlayerName(node) {
         }
         if (me.length) {
             playerName = me.children('span:eq(1)').text();
-        }        
+        }
         for (let i=0; i < players.length; i++) {
-            graphData.data.datasets[i].label = decodeURIComponent(players.eq(i).children('span:eq(1)').text()); 
+            graphData.data.datasets[i].label = decodeURIComponent(players.eq(i).children('span:eq(1)').text());
         }
     } else {
         let player = $('#sc0', node);
@@ -400,11 +400,16 @@ function handleEnd(node) {
     const chart = new Chart(chartEl[0], graphData);
     $('div.hands', pane).css('top', chartEl.offset().top + chartEl.outerHeight(true) + 10);
 
-    chartEl.click(function clickChart(evt){ 
+    chartEl.click(function clickChart(evt){
+        evt.stopPropagation();
         const activeXPoints = chart.getElementsAtXAxis(evt); // or chart.getElementAtEvent(evt);
-        let id = 'azps_' + graphData.data.labels[activeXPoints[0]._index].replace(' ', '_');
-        debugger;
+        let handNumber = activeXPoints[0]._index;
+        if (handNumber === 0) {
+            handNumber = 1;
+        }
+        let id = 'azps_' + graphData.data.labels[handNumber].replace(' ', '_');
         document.getElementById(id).scrollIntoView();
+        return false;
     });
 
     let winner;
@@ -454,11 +459,16 @@ function showAbortiveDraw(node) {
 }
 
 function handleStart(node) {
+
+    if ($('#' + paneID + ' > div.hands > div').length > 0) {
+        return false;
+    }
     handNum = 1;
     resetGraphData();
     scorePane().empty();
     scorePaneInit();
     rememberPlayerName(node);
+
 }
 
 function checkNode(oneNode) {
@@ -468,7 +478,7 @@ function checkNode(oneNode) {
         return;
     }
 
-    if (oneNode.className === (isT4 ? 'nopp' : 'tbc') && 
+    if (oneNode.className === (isT4 ? 'nopp' : 'tbc') &&
         (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局')) {
 
         handleStart(oneNode);
