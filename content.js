@@ -444,7 +444,7 @@ function checkNode(oneNode) {
 
     if (oneNode.className === 'nopp' && (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局')) {
 
-        // TODO check this in T3 - probably doesn't work any more, but that className check is needed for T4
+        // TODO check this in T3 - probably doesn't work any more, but the className check is needed for T4
         handleStart(oneNode);
 
     } else if (testText.length > 10

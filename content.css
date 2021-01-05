@@ -18,7 +18,7 @@
 }
 
 #azpspane table {
-    width: 100%;
+    /*width: 100%;*/
     padding-top: 0.5em;
     border-collapse: collapse;
 }
@@ -29,6 +29,10 @@
 
 #azpspane tr:nth-child(2n+1) {
     background-color: #000;
+}
+
+#azpspane table td {
+    padding: 0 0.2em;
 }
 
 #azpspane td:nth-child(3),#azpspane td:nth-child(4) {
