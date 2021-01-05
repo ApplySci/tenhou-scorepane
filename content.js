@@ -58,6 +58,11 @@ function resetGraphData() {
                 }
             },
             scales: {
+                xAxes: [{
+                    ticks: {
+                        display: false
+                    }
+                }],
                 yAxes: [{
                     ticks: {
                         callback: function(value, index, values) {
@@ -374,10 +379,9 @@ function showWin(node) {
         totalLine += scoreTableT3(node.childNodes[2]);
     }
 
-    graphData.data.labels.push(handNum);
-
     let handName = getHandName();
     if (handName !== false) {
+        graphData.data.labels.push(handName);
         let scoreDiv = showResult(totalLine, handName, node, true);
         // pause so we don't spoil any uradora surprise
         setTimeout(() => scoreDiv.removeClass('hidden'), 500 + nYaku * 1000);
