@@ -161,20 +161,23 @@ function rememberPlayerName(node) {
             playerName = me.children('span:eq(1)').text();
         }
         for (let i=0; i < players.length; i++) {
-            graphData.data.datasets[i].label = decodeURIComponent(players.eq(i).children('span:eq(1)').text());
+            let name = players.eq(i).children('span:last').text();
+            console.log(name);
+            graphData.data.datasets[i].label = name;
         }
     } else {
         let player = $('#sc0', node);
         if (player.length) {
-            playerName = player[0].childNodes[3].innerText;
-            graphData.data.datasets[0].label = decodeURIComponent(playerName);
             if ($('#sc3', node).length === 0 && graphData.data.datasets.length === 4) {
                 graphData.data.datasets.splice(2,1); // remove the green line for sanma
             }
+            playerName = player.children('span:last').text();
+            graphData.data.datasets[graphData.data.datasets.length - 1].label = decodeURIComponent(playerName);
             for (let i=1; i<4; i++) {
                 player = $('#sc'+i, node);
                 if (player.length > 0) {
-                    graphData.data.datasets[i].label = decodeURIComponent(player[0].childNodes[3].innerText);
+                    let name = player.children('span:last').text();
+                    graphData.data.datasets[3 - i].label = name;
                 }
             }
         }
@@ -295,7 +298,7 @@ function scoreTableT3(node) {
     let totalLine = '<table>';
     let nPlayers = 3 + ($('#sc3', node).length ? 1 : 0);
     Array.from(new Array(nPlayers).keys()).forEach(function (i) {
-        totalLine += getOneScore($('#sc' + i, node)[0], i);
+        totalLine += getOneScore($('#sc' + i, node)[0], nPlayers - 1 - i);
     });
     return totalLine + '</table>';
 
@@ -409,6 +412,7 @@ function showWin(node) {
 
 function handleEnd(node) {
     let pane = $('#'+paneID);
+    $('canvas.chart', pane).remove();
     let chartEl = $('<canvas>').addClass('chart');
     pane.prepend(chartEl);
     chartEl.height = Math.ceil(pane.width * 0.6);
