@@ -147,7 +147,6 @@ function scorePane() {
 }
 
 function rememberPlayerName(node) {
-
     if (playerName !== null) {
         return;
     }
@@ -168,11 +167,14 @@ function rememberPlayerName(node) {
         let player = $('#sc0', node);
         if (player.length) {
             playerName = player[0].childNodes[3].innerText;
-            graphData.data.datasets[graphData.data.datasets.length - 1].label = decodeURIComponent(playerName);
+            graphData.data.datasets[0].label = decodeURIComponent(playerName);
+            if ($('#sc3', node).length === 0 && graphData.data.datasets.length === 4) {
+                graphData.data.datasets.splice(2,1); // remove the green line for sanma
+            }
             for (let i=1; i<4; i++) {
                 player = $('#sc'+i, node);
                 if (player.length > 0) {
-                    graphData.data.datasets[i-1].label = decodeURIComponent(player[0].childNodes[3].innerText);
+                    graphData.data.datasets[i].label = decodeURIComponent(player[0].childNodes[3].innerText);
                 }
             }
         }
