@@ -10,16 +10,10 @@ let handNum = 1;
 let playerName = null;
 let isT4;
 let graphData = {};
-
 const paneID = 'azpspane';
 
-const observerSettings = {
-    characterData: true,
-    childList: true,
-    subtree: true
-};
-
 function resetGraphData() {
+
     graphData = {
         type: 'line',
         data: {
@@ -57,6 +51,14 @@ function resetGraphData() {
                     steppedLine: true
                 }
             },
+            layout: {
+                padding: {
+                    left: 0,
+                    right: 10,
+                    top: 0,
+                    bottom: 0
+                }
+            },
             scales: {
                 xAxes: [{
                     ticks: {
@@ -73,6 +75,7 @@ function resetGraphData() {
             }
         }
     };
+
 }
 
 function getGamePane() {
@@ -91,7 +94,11 @@ function getGamePane() {
 
 function setToObserve() {
 
-    mutationObserver.observe(document.documentElement, observerSettings);
+    mutationObserver.observe(document.documentElement, {
+        characterData: true,
+        childList: true,
+        subtree: true
+    });
 
 }
 
@@ -122,11 +129,13 @@ function moveMainPane() {
 }
 
 function scorePaneInit() {
+
     $('#' + paneID)
         .append($('<div>')
             .addClass('hands')
-            .append($('<h3>').text('The ApplySci Tenhou Score Pane'))
-        );
+            .append($('<h3>').text('The ApplySci Tenhou Score Pane').attr('id', 'azps_start')
+        ));
+
 }
 
 function scorePane() {
@@ -147,6 +156,7 @@ function scorePane() {
 }
 
 function rememberPlayerName(node) {
+
     if (playerName !== null) {
         return;
     }
@@ -162,7 +172,6 @@ function rememberPlayerName(node) {
         }
         for (let i=0; i < players.length; i++) {
             let name = players.eq(i).children('span:last').text();
-            console.log(name);
             graphData.data.datasets[i].label = name;
         }
     } else {
@@ -224,6 +233,7 @@ function showResult(texts, handName, node, hide) {
     }
     newEl.prepend($('<h2>').text(handName).attr('id', 'azps_' + handName.replace(' ', '_')));
     return newEl;
+
 }
 
 function getVal(node) {
@@ -291,6 +301,7 @@ function getOneScore(node, player) {
         chartOneScore(player, totalScore, score);
     }
     return totalLine + '</td></tr>';
+
 }
 
 function scoreTableT3(node) {
@@ -408,25 +419,46 @@ function showWin(node) {
         // pause before revealing the scores, so that we don't spoil any uradora surprise
         setTimeout(() => scoreDiv.removeClass('hidden'), 500 + nYaku * 1000);
     }
+
+}
+
+function hasWon() {
+    // if we are here, then the live player has won
+    // TODO do something nice to mark the win; add options sceen to manage this
+    console.log('winner, winner, chicken dinner');
+}
+
+function resetBetweenGames() {
+    playerName = null;
+    handNum = 1;
+    resetGraphData();
 }
 
 function handleEnd(node) {
+
     let pane = $('#'+paneID);
-    $('canvas.chart', pane).remove();
+    if ($('canvas.chart', pane).length) {
+        return;
+    }
     let chartEl = $('<canvas>').addClass('chart');
     pane.prepend(chartEl);
     chartEl.height = Math.ceil(pane.width * 0.6);
     const chart = new Chart(chartEl[0], graphData);
     $('div.hands', pane).css('top', chartEl.offset().top + chartEl.outerHeight(true) + 10);
 
+    let labels = graphData.data.labels;
+
     chartEl.click(function clickChart(evt){
         evt.stopPropagation();
+        evt.preventDefault();
         const activeXPoints = chart.getElementsAtXAxis(evt); // or chart.getElementAtEvent(evt);
         let handNumber = activeXPoints[0]._index;
+        let id;
         if (handNumber === 0) {
-            handNumber = 1;
+            id = 'azps_start';
+        } else {
+            id = 'azps_' + labels[handNumber].replace(' ', '_');
         }
-        let id = 'azps_' + graphData.data.labels[handNumber].replace(' ', '_');
         document.getElementById(id).scrollIntoView();
         return false;
     });
@@ -439,12 +471,13 @@ function handleEnd(node) {
             .childNodes[0]
             .nodeValue;
     }
-    if (winner !== playerName || $('div.tbc.bgb:contains(Exit)').length || $('button:contains(Exit)').length) {
-        return;
+    let isWinner = winner === playerName;
+
+    if (isWinner && $('div.tbc.bgb:contains(Exit)').length + $('button:contains(Exit)').length === 0) {
+        hasWon();
     }
-    // if we are here, then the live player has won
-    // TODO do something nice to mark the win; add options sceen to manage this
-    console.log('winner, winner, chicken dinner');
+
+    resetBetweenGames();
 }
 
 function removePane() {
@@ -461,6 +494,8 @@ function removePane() {
     } else {
         gamePane.css('margin', '0 auto');
     }
+
+    resetBetweenGames();
 }
 
 function showAbortiveDraw(node) {
@@ -475,6 +510,7 @@ function showAbortiveDraw(node) {
         + '</h3>';
 
     showResult(totalLine, getHandName(), null, false);
+
 }
 
 function handleStart(node) {
@@ -482,8 +518,7 @@ function handleStart(node) {
     if ($('#' + paneID + ' > div.hands > div').length > 0) {
         return false;
     }
-    handNum = 1;
-    resetGraphData();
+    resetBetweenGames();
     scorePane().empty();
     scorePaneInit();
     rememberPlayerName(node);
@@ -537,9 +572,11 @@ function checkNode(oneNode) {
         removePane();
 
     }
+
 }
 
 function onMutate(mutations) {
+
     mutationObserver.disconnect();
     mutations.forEach(function doAMutation(oneMutation) {
         if (oneMutation.addedNodes.length) {
@@ -555,6 +592,7 @@ function onMutate(mutations) {
         }
     });
     setToObserve();
+
 }
 
 // This is what happens when the page is first loaded
