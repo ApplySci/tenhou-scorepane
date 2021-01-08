@@ -60,6 +60,12 @@ function resetGraphData() {
                     bottom: 0
                 }
             },
+            legend: {
+                labels: {
+                    boxWidth: 20,
+                    fontColor: '#EEE'
+                }
+            },
             scales: {
                 xAxes: [{
                     ticks: {
@@ -465,7 +471,7 @@ function curryClickChart(chart, labels) {
     return function clickChart(evt){
         evt.stopPropagation();
         evt.preventDefault();
-        const activeXPoints = chart.getElementsAtXAxis(evt); // or chart.getElementAtEvent(evt);
+        const activeXPoints = chart.getElementsAtXAxis(evt);
         let handNumber = activeXPoints[0]._index;
         let id;
         if (handNumber === 0) {
@@ -541,6 +547,7 @@ function removePane() {
     }
 
     resetBetweenGames();
+    allowNewHands = true;
 }
 
 function showAbortiveDraw(node) {
@@ -587,6 +594,10 @@ function checkNode(oneNode) {
 
     }
 
+    if (!allowNewHands) {
+        return;
+    }
+
     if (oneNode.className === (isT4 ? 'nopp' : 'tbc')) {
         if (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局') {
             return handleStart(oneNode);
@@ -594,10 +605,6 @@ function checkNode(oneNode) {
         if (testText.substr(0,2) === '終局' || testText.substr(0,3) === 'End') {
             return handleEnd(oneNode);
         }
-    }
-
-    if (!allowNewHands) {
-        return;
     }
 
     if (testText.length > 10
