@@ -514,9 +514,28 @@ function checkWinner(node) {
 
 }
 
+function finalScore(node) {
+
+    let table = '<table>';
+    if (isT4) {
+        let rows = $('.bbg5', node);
+        rows.each(function () {
+            table += '<tr><td>' + getVal(this.childNodes[0])
+                + '</td><td>' + $('td:first', this).text()
+                + '</td><td>' + $('td:eq(1)', this).text()
+                + '</td></tr>';
+        });
+    } else {
+    }
+    table += '</table>';
+    showResult(table, 'Final scores', null, false);
+
+}
+
 function handleEnd(node) {
 
     allowNewHands = false;
+    finalScore(node);
     scoreChart();
     resetBetweenGames();
     checkWinner();
@@ -577,24 +596,22 @@ function checkNode(oneNode) {
         return;
     }
 
-    if (oneNode.className === (isT4 ? 'nopp' : 'tbc') &&
-        (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局')) {
-
-        return handleStart(oneNode);
-
-    } else if ((oneNode.className === 'tbc' || isT4)
-        && (testText.substr(0,2) === '終局' || testText.substr(0,3) === 'End')
-        ) {
-
-        return handleEnd(oneNode);
-
-    } else if ($('#' + paneID).length && (
+    if ($('#' + paneID).length && (
             $('#pane1', oneNode).length
             || (isT4 && oneNode.className.includes('s0') && testText.includes('Online:'))
         ) ) {
 
         return removePane();
 
+    }
+
+    if (oneNode.className === (isT4 ? 'nopp' : 'tbc')) {
+        if (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局') {
+            return handleStart(oneNode);
+        }
+        if (testText.substr(0,2) === '終局' || testText.substr(0,3) === 'End') {
+            return handleEnd(oneNode);
+        }
     }
 
     if (!allowNewHands) {
@@ -608,14 +625,17 @@ function checkNode(oneNode) {
 
         return showExhaustiveDraw(oneNode);
 
-    } else if (oneNode.childNodes[0].id === 'total'
+    }
+
+    if (oneNode.childNodes[0].id === 'total'
         || (isT4 && testText.length > 20 && oneNode.className.includes('nopp')
         ) ) {
 
         return showWin(oneNode);
 
-    }  else if ((oneNode.className === 'tbc'
-            && $('#sc0', oneNode).length
+    }
+
+    if ((oneNode.className === 'tbc' && $('#sc0', oneNode).length
             && $('table', oneNode).length === 1)
         ) {
 
