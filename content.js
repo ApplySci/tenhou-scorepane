@@ -10,6 +10,7 @@ let handNum = 1;
 let playerName = null;
 let isT4;
 let graphData = {};
+let allowNewHands = true;
 const paneID = 'azpspane';
 
 function resetGraphData() {
@@ -130,6 +131,7 @@ function moveMainPane() {
 
 function scorePaneInit() {
 
+    allowNewHands = true;
     $('#' + paneID)
         .append($('<div>')
             .addClass('hands')
@@ -363,54 +365,7 @@ function yakuLine(yaku, han) {
 
 }
 
-function showWin(node) {
-
-    rememberPlayerName(node);
-    let totalLine;
-    let nYaku;
-
-    if (isT4) {
-
-        if ($('.yk,.ym',node).length === 0) {
-            return;
-        }
-        let scoreTable = getT4ScoreTable(node);
-
-        totalLine = appendNodes($('div.s0 > div:eq(1)', node)[0])
-                + '<br>'
-                + riichiHonba(scoreTable);
-
-        // get the yaku
-
-        totalLine += '<table>';
-        let yakuList = $('table:first table tr', node);
-        nYaku = yakuList.length;
-        yakuList.each(function getOneYaku(row) {
-            totalLine += yakuLine($('.yk,.ym', this).text(), $('.hn', this).text());
-        });
-        totalLine += '</table>';
-
-        totalLine += scoreTableT4(scoreTable);
-
-    } else {
-
-        totalLine = appendNodes(node.children[0])  // score
-            + '<br>'
-            + riichiHonba(node.childNodes[2]);
-
-        // get the yaku
-
-        totalLine += '<table>';
-        let yakuTable = $("tr:not(:has(table))", node.childNodes[1]);
-        nYaku = yakuTable.length;
-        yakuTable.each(function addYakuLine(row) {
-            totalLine += yakuLine(getVal(this.childNodes[0]), getVal(this.childNodes[1]));
-        });
-        totalLine += '</table>';
-
-        // get the scores
-        totalLine += scoreTableT3(node.childNodes[2]);
-    }
+function insertWinTableIntoDOM(node, totalLine, nYaku) {
 
     let handName = getHandName();
     if (handName !== false) {
@@ -422,33 +377,92 @@ function showWin(node) {
 
 }
 
+function winTableT3(node) {
+
+    let totalLine;
+    let nYaku;
+
+    totalLine = appendNodes(node.children[0])  // score
+        + '<br>'
+        + riichiHonba(node.childNodes[2]);
+
+    // get the yaku
+
+    totalLine += '<table>';
+    let yakuTable = $("tr:not(:has(table))", node.childNodes[1]);
+    nYaku = yakuTable.length;
+    yakuTable.each(function addYakuLine(row) {
+        totalLine += yakuLine(getVal(this.childNodes[0]), getVal(this.childNodes[1]));
+    });
+    totalLine += '</table>';
+
+    // get the scores
+    totalLine += scoreTableT3(node.childNodes[2]);
+
+    insertWinTableIntoDOM(node, totalLine, nYaku);
+}
+
+function winTableT4(node) {
+
+    let totalLine;
+    let nYaku;
+
+    if ($('.yk,.ym',node).length === 0) {
+        return;
+    }
+    let scoreTable = getT4ScoreTable(node);
+
+    totalLine = appendNodes($('div.s0 > div:eq(1)', node)[0])
+            + '<br>'
+            + riichiHonba(scoreTable);
+
+    // get the yaku
+
+    totalLine += '<table>';
+    let yakuList = $('table:first table tr', node);
+    nYaku = yakuList.length;
+    yakuList.each(function getOneYaku(row) {
+        totalLine += yakuLine($('.yk,.ym', this).text(), $('.hn', this).text());
+    });
+    totalLine += '</table>';
+
+    totalLine += scoreTableT4(scoreTable);
+
+    insertWinTableIntoDOM(node, totalLine, nYaku);
+
+}
+
+function showWin(node) {
+
+    rememberPlayerName(node);
+
+    if (isT4) {
+        winTableT4(node);
+    } else {
+        winTableT3(node);
+    }
+
+}
+
 function hasWon() {
+
     // if we are here, then the live player has won
     // TODO do something nice to mark the win; add options sceen to manage this
     console.log('winner, winner, chicken dinner');
+
 }
 
 function resetBetweenGames() {
+
     playerName = null;
     handNum = 1;
     resetGraphData();
+
 }
 
-function handleEnd(node) {
+function curryClickChart(chart, labels) {
 
-    let pane = $('#'+paneID);
-    if ($('canvas.chart', pane).length) {
-        return;
-    }
-    let chartEl = $('<canvas>').addClass('chart');
-    pane.prepend(chartEl);
-    chartEl.height = Math.ceil(pane.width * 0.6);
-    const chart = new Chart(chartEl[0], graphData);
-    $('div.hands', pane).css('top', chartEl.offset().top + chartEl.outerHeight(true) + 10);
-
-    let labels = graphData.data.labels;
-
-    chartEl.click(function clickChart(evt){
+    return function clickChart(evt){
         evt.stopPropagation();
         evt.preventDefault();
         const activeXPoints = chart.getElementsAtXAxis(evt); // or chart.getElementAtEvent(evt);
@@ -461,9 +475,30 @@ function handleEnd(node) {
         }
         document.getElementById(id).scrollIntoView();
         return false;
-    });
+    };
+
+}
+
+function scoreChart() {
+
+    let pane = $('#'+paneID);
+    if ($('canvas.chart', pane).length) {
+        return;
+    }
+    let chartEl = $('<canvas>').addClass('chart');
+    pane.prepend(chartEl);
+    chartEl.height = Math.ceil(pane.width * 0.6);
+    const chart = new Chart(chartEl[0], graphData);
+    $('div.hands', pane).css('top', chartEl.offset().top + chartEl.outerHeight(true) + 10);
+
+    chartEl.click(curryClickChart(chart, graphData.data.labels));
+
+}
+
+function checkWinner(node) {
 
     let winner;
+
     if (isT4) {
         winner = $('.bbg5:first')[0].childNodes[0].nodeValue;
     } else {
@@ -477,11 +512,20 @@ function handleEnd(node) {
         hasWon();
     }
 
+}
+
+function handleEnd(node) {
+
+    allowNewHands = false;
+    scoreChart();
     resetBetweenGames();
+    checkWinner();
+
 }
 
 function removePane() {
 
+    allowNewHands = false;
     $('#' + paneID).remove();
 
     // Re-centre the tenhou main panel
@@ -515,6 +559,7 @@ function showAbortiveDraw(node) {
 
 function handleStart(node) {
 
+    allowNewHands = true;
     if ($('#' + paneID + ' > div.hands > div').length > 0) {
         return false;
     }
@@ -535,41 +580,46 @@ function checkNode(oneNode) {
     if (oneNode.className === (isT4 ? 'nopp' : 'tbc') &&
         (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局')) {
 
-        handleStart(oneNode);
+        return handleStart(oneNode);
 
-    } else if (testText.length > 10
-        && (testText.substr(0,6) === 'Redeal' || testText.substr(0,2) === '流局')
-        && (oneNode.className === 'tbc' || (isT4 && oneNode.className.includes('nopp')))
-        ) {
-
-        showExhaustiveDraw(oneNode);
-
-    } else if (oneNode.childNodes[0].id === 'total'
-        || (isT4 && testText.length > 20 && oneNode.className.includes('nopp')
-        ) ) {
-
-        showWin(oneNode);
-
-    } else if (
-        (oneNode.className === 'tbc' || isT4)
+    } else if ((oneNode.className === 'tbc' || isT4)
         && (testText.substr(0,2) === '終局' || testText.substr(0,3) === 'End')
         ) {
 
-        handleEnd(oneNode);
-
-    } else if ((oneNode.className === 'tbc'
-            && $('#sc0', oneNode).length
-            && $('table', oneNode).length === 1)
-        ) {
-
-        showAbortiveDraw(oneNode);
+        return handleEnd(oneNode);
 
     } else if ($('#' + paneID).length && (
             $('#pane1', oneNode).length
             || (isT4 && oneNode.className.includes('s0') && testText.includes('Online:'))
         ) ) {
 
-        removePane();
+        return removePane();
+
+    }
+
+    if (!allowNewHands) {
+        return;
+    }
+
+    if (testText.length > 10
+        && (testText.substr(0,6) === 'Redeal' || testText.substr(0,2) === '流局')
+        && (oneNode.className === 'tbc' || (isT4 && oneNode.className.includes('nopp')))
+        ) {
+
+        return showExhaustiveDraw(oneNode);
+
+    } else if (oneNode.childNodes[0].id === 'total'
+        || (isT4 && testText.length > 20 && oneNode.className.includes('nopp')
+        ) ) {
+
+        return showWin(oneNode);
+
+    }  else if ((oneNode.className === 'tbc'
+            && $('#sc0', oneNode).length
+            && $('table', oneNode).length === 1)
+        ) {
+
+        return showAbortiveDraw(oneNode);
 
     }
 
@@ -600,6 +650,7 @@ function onMutate(mutations) {
 Chart.platform.disableCSSInjection = true;
 
 chrome.storage.local.get(null, function(options) {
+
     getGamePane(); // ensure isT4 is set
     // we're not using options yet, but almost certainly will do eventually
     mutationObserver = new MutationObserver(onMutate);
@@ -614,6 +665,7 @@ chrome.storage.local.get(null, function(options) {
         }
         timeout = setTimeout(setWidth, 1000);
     });
+
 });
 
 }());
