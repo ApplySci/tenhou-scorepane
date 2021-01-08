@@ -514,28 +514,10 @@ function checkWinner(node) {
 
 }
 
-function finalScore(node) {
-
-    let table = '<table>';
-    if (isT4) {
-        let rows = $('.bbg5', node);
-        rows.each(function () {
-            table += '<tr><td>' + getVal(this.childNodes[0])
-                + '</td><td>' + $('td:first', this).text()
-                + '</td><td>' + $('td:eq(1)', this).text()
-                + '</td></tr>';
-        });
-    } else {
-    }
-    table += '</table>';
-    showResult(table, 'Final scores', null, false);
-
-}
 
 function handleEnd(node) {
 
     allowNewHands = false;
-    finalScore(node);
     scoreChart();
     resetBetweenGames();
     checkWinner();
