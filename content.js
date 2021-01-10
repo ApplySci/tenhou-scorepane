@@ -1,3 +1,5 @@
+// first game in 1066 = round S1 listed as West 328
+
 /*jshint esversion:6, -W014 */
 /*global jQuery, window, chrome, MutationObserver, console, Chart */
 
@@ -158,7 +160,12 @@ function scorePane() {
         $('body').append(pane);
         setWidth();
         scorePaneInit();
+        resetBetweenGames();
     }
+    if (!('data' in graphData)) {
+        resetGraphData();
+    }
+
     return pane;
 
 }
@@ -168,6 +175,7 @@ function rememberPlayerName(node) {
     if (playerName !== null) {
         return;
     }
+        
     let players;
     if (isT4) {
         players = $('.bbg5', node);
@@ -342,6 +350,7 @@ function getT4ScoreTable(node) {
 
 function showExhaustiveDraw(node) {
 
+    scorePane();
     rememberPlayerName(node);
     let outcome;
     let block = '<h3>Draw ';
@@ -440,6 +449,7 @@ function winTableT4(node) {
 
 function showWin(node) {
 
+    scorePane();
     rememberPlayerName(node);
 
     if (isT4) {
@@ -520,9 +530,9 @@ function checkWinner(node) {
 
 }
 
-
 function handleEnd(node) {
 
+    scorePane();
     allowNewHands = false;
     scoreChart();
     resetBetweenGames();
@@ -532,7 +542,6 @@ function handleEnd(node) {
 
 function removePane() {
 
-    allowNewHands = false;
     $('#' + paneID).remove();
 
     // Re-centre the tenhou main panel
@@ -552,16 +561,7 @@ function removePane() {
 
 function showAbortiveDraw(node) {
 
-    rememberPlayerName(node);
-
-    let outcome = node.childNodes[0].childNodes[1];
-    let totalLine = '<h3>'
-        + node.childNodes[0].childNodes[0].innerText
-        + ' '
-        + riichiHonba(outcome)
-        + '</h3>';
-
-    showResult(totalLine, getHandName(), null, false);
+    return showExhaustiveDraw(node);
 
 }
 
@@ -576,6 +576,19 @@ function handleStart(node) {
     scorePaneInit();
     rememberPlayerName(node);
 
+}
+
+function stringStartsWith(haystack, needles) {
+
+    let found = false;
+    needles.some(function testOneNeedle(needle) {
+        if (haystack.substr(0, needle.length) === needle) {
+            found = true;
+            return true;
+        }
+    });
+    return found;
+    
 }
 
 function checkNode(oneNode) {
@@ -598,22 +611,16 @@ function checkNode(oneNode) {
         return;
     }
 
-    if (oneNode.className === (isT4 ? 'nopp' : 'tbc')) {
-        if (testText.substr(0,5) === 'Start' || testText.substr(0,2) === '對局') {
+    if (oneNode.className.includes(isT4 ? 'nopp' : 'tbc') && testText.length > 10) {
+        if (stringStartsWith(testText, ['Start', '對局', 'Début', 'Bắt đầu'])) {
             return handleStart(oneNode);
         }
-        if (testText.substr(0,2) === '終局' || testText.substr(0,3) === 'End') {
+        if (stringStartsWith(testText, ['終局','End', 'Fin', 'Kết thúc', 'Koniec'])) {
             return handleEnd(oneNode);
+        }        
+        if (stringStartsWith(testText, ['Redeal', '流局', 'Ryuukyoku', 'Rejouer', 'Ván hoà', 'Powtórka'])) {
+            return showExhaustiveDraw(oneNode);
         }
-    }
-
-    if (testText.length > 10
-        && (testText.substr(0,6) === 'Redeal' || testText.substr(0,2) === '流局')
-        && (oneNode.className === 'tbc' || (isT4 && oneNode.className.includes('nopp')))
-        ) {
-
-        return showExhaustiveDraw(oneNode);
-
     }
 
     if (oneNode.childNodes[0].id === 'total'
@@ -624,11 +631,29 @@ function checkNode(oneNode) {
 
     }
 
-    if ((oneNode.className === 'tbc' && $('#sc0', oneNode).length
-            && $('table', oneNode).length === 1)
-        ) {
+    if (oneNode.className === 'tbc' && $('button', oneNode).length
+            && $('table', oneNode).length === 1
+            && !isT4 && $('#sc0', oneNode).length
+            && testText.includes('') && testText.includes('')) {
 
-        return showAbortiveDraw(oneNode);
+        // https://tenhou.net/3/?log=2016032809gm-0089-0000-19c59dbd&tw=1&ts=7
+        // http://tenhou.net/4/?log=2018031407gm-0009-0000-0e47c343&tw=0
+
+        console.log('======================== possible abortive draw');
+        console.log(oneNode);
+            
+        if (stringStartsWith(testText, [
+                '觀戰', 'Redeal: ', 'Torpillage: ', 'Ván hoà: ', 'Powtórka (',
+                'Kyuushu kyuuhai', 'Kyūshu kyūhai',
+                'Suukaikan', 'Sūkaikan', 
+                'Suufon renda', 'Sūfon renda',
+                'Sanchahou', 'Sanchahō',
+                'Suucha riichi', 'Sūcha riichi',
+                ])) {
+                    
+            console.log('is abortive draw');
+            return showAbortiveDraw(oneNode);
+        }
 
     }
 

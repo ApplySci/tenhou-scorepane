@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Tenhou score pane",
-    "version": "1.2.5",
+    "version": "1.2.7",
     "description": "Adds a pane to the tenhou.net clients (/3, /4) in-game which contains the score history of the hands in the current game",
     "icons": {
         "16": "icons/16.png",
