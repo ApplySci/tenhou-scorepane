@@ -265,7 +265,7 @@ function getHandImageT3(tiles, winner) {
             sdy = Math.ceil(sourceHeight * 0.12);
             sx = Math.ceil(sourceWidth * 0.15);
             sy = 0;
-            tdx = w;
+            tdx = w*1.4;
             tdy = w * sdy/sdx;
             break;
         case 3:
@@ -285,10 +285,11 @@ function getHandImageT3(tiles, winner) {
             tdy = Math.round(w * sdy/sdx);
             break;
     }
-
+    console.log('s=' + sdx + ',' + sdy + '; t=' + tdx + ',' + tdy);
     tiles.height = tdy;
     ctx.translate(tiles.width/2, tdy/2);
     ctx.rotate(rotation);
+    ctx.translate(-tiles.width/2, -tdy/2);
     ctx.drawImage(source[0], sx, sy, sdx, sdy, 0, 0, tdx, tdy);
 
 }
@@ -326,7 +327,6 @@ function showResult(texts, handName, node, hide) {
                     }
                 }
             );
-            console.log('winner=' + winner);
             getHandImageT3(tiles, winner);
         }
     }
