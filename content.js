@@ -1,5 +1,3 @@
-// first game in 1066 = round S1 listed as West 328
-
 /*jshint esversion:6, -W014 */
 /*global jQuery, window, chrome, MutationObserver, console, Chart */
 
@@ -81,6 +79,12 @@ function resetGraphData() {
                         }
                     }
                 }]
+            },
+            title: {
+                display: true,
+                padding: 0,
+                position: 'bottom',
+                text: 'ApplySci Tenhou Score Pane'
             }
         }
     };
@@ -117,7 +121,7 @@ function setWidth() {
 
     let gamePane = getGamePane();
     $('#' + paneID).css({
-        'width': $('body').width() - gamePane.width() - 40
+        'width': Math.floor($('body').width() - gamePane.width() - 40)
     });
     moveMainPane();
 
@@ -175,7 +179,7 @@ function rememberPlayerName(node) {
     if (playerName !== null) {
         return;
     }
-        
+
     let players;
     if (isT4) {
         players = $('.bbg5', node);
@@ -194,7 +198,8 @@ function rememberPlayerName(node) {
         let player = $('#sc0', node);
         if (player.length) {
             if ($('#sc3', node).length === 0 && graphData.data.datasets.length === 4) {
-                graphData.data.datasets.splice(2,1); // remove the green line for sanma
+                // remove the green score line (the missing 4th player) for sanma
+                graphData.data.datasets.splice(2,1);
             }
             playerName = player.children('span:last').text();
             graphData.data.datasets[graphData.data.datasets.length - 1].label = decodeURIComponent(playerName);
@@ -232,6 +237,73 @@ function getHandName(node) {
 
 }
 
+function getHandImageT3(tiles, winner) {
+
+    // copy the image of the winning hand
+
+    let sx, sy, sdx, sdy, tdx, tdy;
+    let w = Math.round($(tiles).parent().width());
+    let rotation = winner * Math.PI/2;
+    let source = $('div.nosel > div.tbl > canvas:eq(1)');
+    let ctx = tiles.getContext('2d');
+    // ctx.imageSmoothingEnabled = true;
+    
+    let sourceWidth = source.parent().parent().width();
+    let sourceHeight = source.parent().parent().height();
+    
+    switch(winner) {
+        case 1:
+            sdx = Math.ceil(sourceWidth * 0.1);
+            sdy = Math.ceil(sourceHeight * 0.85);
+            sx = source.width() - sdx;
+            sy = 0;
+            tdx = w;
+            tdy = w * sdy/sdx;            
+            break;
+        case 2:
+            sdx = Math.ceil(sourceWidth * 0.7);
+            sdy = Math.ceil(sourceHeight * 0.12);
+            sx = Math.ceil(sourceWidth * 0.15);
+            sy = 0;
+            tdx = w;
+            tdy = w * sdy/sdx;
+            break;
+        case 3:
+            sdx = Math.ceil(sourceWidth * 0.2);
+            sdy = Math.ceil(sourceHeight * 0.9);
+            sx = 0;
+            sy = 0;
+            tdx = w;
+            tdy = w * sdy/sdx;;
+            break;
+        default:
+            sdx = sourceWidth;
+            sdy = Math.ceil(sourceHeight * 0.22);
+            sx = 0;
+            sy = source.height();
+            tdx = w;
+            tdy = Math.round(w * sdy/sdx);
+            break;
+    }
+
+    tiles.height = tdy;
+    ctx.translate(tiles.width/2, tdy/2);
+    ctx.rotate(rotation);
+    ctx.drawImage(source[0], sx, sy, sdx, sdy, 0, 0, tdx, tdy);
+
+}
+
+function getHandImageT4(node, tiles) {
+
+    // copy the image of the winning hand
+
+    let source = $('canvas:first', node);
+    tiles.height = Math.ceil(source.height() * tiles.width / source.width());
+    tiles.getContext('2d').imageSmoothingEnabled = true;
+    tiles.getContext('2d').drawImage(source[0], 0, 0, Math.round(tiles.width), Math.round(tiles.height));
+
+}
+
 function showResult(texts, handName, node, hide) {
 
     let newEl = $('<div>').html(texts);
@@ -239,13 +311,24 @@ function showResult(texts, handName, node, hide) {
         newEl.addClass('hidden');
     }
     $('div.hands', scorePane()).prepend(newEl).prop('scrollTop', 0);
-    if (node !== null && isT4) {
-        let source = $('canvas:first', node);
+    if (node !== null) {
         let tiles = document.createElement('canvas');
         newEl.prepend(tiles);
-        let newHeight = source.height() * tiles.width / source.width();
-        tiles.height = Math.ceil(newHeight);
-        tiles.getContext('2d').drawImage(source[0], 0, 0, tiles.width, newHeight);
+        if (isT4) {
+            getHandImageT4(node, tiles);
+        } else {
+            // work out from texts which player has won: 0=us, 1=right, 2=opposite, 3=left
+            let winner = 0;
+            $('table', newEl).eq(1).find('tr').each(
+                function findWinner(id) {
+                    if ($('td', this).eq(3).text().substr(0,1) === '+') {
+                        winner = id;
+                    }
+                }
+            );
+            console.log('winner=' + winner);
+            getHandImageT3(tiles, winner);
+        }
     }
     newEl.prepend($('<h2>').text(handName).attr('id', 'azps_' + handName.replace(' ', '_')));
     return newEl;
@@ -387,6 +470,7 @@ function insertWinTableIntoDOM(node, totalLine, nYaku) {
         graphData.data.labels.push(handName);
         let scoreDiv = showResult(totalLine, handName, node, true);
         // pause before revealing the scores, so that we don't spoil any uradora surprise
+        scoreDiv.removeClass('hidden'); // ZZZ TODO
         setTimeout(() => scoreDiv.removeClass('hidden'), 500 + nYaku * 1000);
     }
 
@@ -462,7 +546,7 @@ function showWin(node) {
 
 function hasWon() {
 
-    // if we are here, then the live player has won
+    // if we are here, then the live player has won the game
     // TODO do something nice to mark the win; add options sceen to manage this
     console.log('winner, winner, chicken dinner');
 
@@ -478,6 +562,7 @@ function resetBetweenGames() {
 
 function curryClickChart(chart, labels) {
 
+    // currying functions will always feel like witchcraft to me
     return function clickChart(evt){
         evt.stopPropagation();
         evt.preventDefault();
@@ -588,7 +673,7 @@ function stringStartsWith(haystack, needles) {
         }
     });
     return found;
-    
+
 }
 
 function checkNode(oneNode) {
@@ -617,7 +702,7 @@ function checkNode(oneNode) {
         }
         if (stringStartsWith(testText, ['終局','End', 'Fin', 'Kết thúc', 'Koniec'])) {
             return handleEnd(oneNode);
-        }        
+        }
         if (stringStartsWith(testText, ['Redeal', '流局', 'Ryuukyoku', 'Rejouer', 'Ván hoà', 'Powtórka'])) {
             return showExhaustiveDraw(oneNode);
         }
@@ -637,20 +722,18 @@ function checkNode(oneNode) {
             && testText.includes('') && testText.includes('')) {
 
         // https://tenhou.net/3/?log=2016032809gm-0089-0000-19c59dbd&tw=1&ts=7
-        // http://tenhou.net/4/?log=2018031407gm-0009-0000-0e47c343&tw=0
+        // https://tenhou.net/4/?log=2018031407gm-0009-0000-0e47c343&tw=0&ts=2
 
-        console.log('======================== possible abortive draw');
-        console.log(oneNode);
-            
+
         if (stringStartsWith(testText, [
                 '觀戰', 'Redeal: ', 'Torpillage: ', 'Ván hoà: ', 'Powtórka (',
                 'Kyuushu kyuuhai', 'Kyūshu kyūhai',
-                'Suukaikan', 'Sūkaikan', 
+                'Suukaikan', 'Sūkaikan',
                 'Suufon renda', 'Sūfon renda',
                 'Sanchahou', 'Sanchahō',
                 'Suucha riichi', 'Sūcha riichi',
                 ])) {
-                    
+
             console.log('is abortive draw');
             return showAbortiveDraw(oneNode);
         }
