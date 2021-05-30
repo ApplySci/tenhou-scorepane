@@ -98,7 +98,7 @@ function getGamePane() {
         isT4 = window.location.pathname.substring(0,2) === '/4';
     }
     if (isT4) {
-        return $('div.nosel:first');
+        return $('div.nosel:lt(2)');
     } else {
         return $('div.nosel > div.nosel.tbl:first');
     }
@@ -247,34 +247,34 @@ function getHandImageT3(tiles, winner) {
     let source = $('div.nosel > div.tbl > canvas:eq(1)');
     let ctx = tiles.getContext('2d');
     // ctx.imageSmoothingEnabled = true;
-    
+
     let sourceWidth = source.parent().parent().width();
     let sourceHeight = source.parent().parent().height();
-    
+
     switch(winner) {
         case 1:
             sdx = Math.ceil(sourceWidth * 0.1);
             sdy = Math.ceil(sourceHeight * 0.85);
             sx = source.width() - sdx;
             sy = 0;
-            tdx = w;
-            tdy = w * sdy/sdx;            
+            tdx = w * sdy/sdx;
+            tdy = w;
             break;
         case 2:
             sdx = Math.ceil(sourceWidth * 0.7);
             sdy = Math.ceil(sourceHeight * 0.12);
             sx = Math.ceil(sourceWidth * 0.15);
             sy = 0;
-            tdx = w*1.4;
+            tdx = w;
             tdy = w * sdy/sdx;
             break;
         case 3:
-            sdx = Math.ceil(sourceWidth * 0.2);
+            sdx = Math.ceil(sourceWidth * 0.08);
             sdy = Math.ceil(sourceHeight * 0.9);
             sx = 0;
             sy = 0;
-            tdx = w;
-            tdy = w * sdy/sdx;;
+            tdx = Math.round(w * sdx/sdy);
+            tdy = w;
             break;
         default:
             sdx = sourceWidth;
@@ -313,9 +313,9 @@ function showResult(texts, handName, node, hide) {
     }
     $('div.hands', scorePane()).prepend(newEl).prop('scrollTop', 0);
     if (node !== null) {
-        let tiles = document.createElement('canvas');
-        newEl.prepend(tiles);
         if (isT4) {
+            let tiles = document.createElement('canvas');
+            newEl.prepend(tiles);
             getHandImageT4(node, tiles);
         } else {
             // work out from texts which player has won: 0=us, 1=right, 2=opposite, 3=left
@@ -327,7 +327,7 @@ function showResult(texts, handName, node, hide) {
                     }
                 }
             );
-            getHandImageT3(tiles, winner);
+            // getHandImageT3(tiles, winner); // still working on this
         }
     }
     newEl.prepend($('<h2>').text(handName).attr('id', 'azps_' + handName.replace(' ', '_')));
