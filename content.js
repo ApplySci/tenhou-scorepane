@@ -16,31 +16,30 @@ const paneID = 'azpspane';
 function resetGraphData() {
 
     graphData = {
-        type: 'line',
         data: {
-            labels: [0],
             datasets: [{
-                label: 'A',
-                data: [ ],
-                fill: false,
                 borderColor: "#A00",
-            }, {
-                label: 'B',
                 data: [ ],
                 fill: false,
-                borderColor: "#22F"
+                label: 'A'
             }, {
-                label: 'C',
+                borderColor: "#22F",
                 data: [ ],
                 fill: false,
-                borderColor: "#3F3"
+                label: 'B'
             }, {
-                label: 'D',
+                borderColor: "#3F3",
                 data: [ ],
                 fill: false,
+                label: 'C'
+            }, {
                 borderColor: "#FF3",
-                borderWidth: 6
-            }]
+                borderWidth: 6,
+                data: [ ],
+                fill: false,
+                label: 'D'
+            }],
+            labels: [0]
         },
         options: {
             elements: {
@@ -54,10 +53,10 @@ function resetGraphData() {
             },
             layout: {
                 padding: {
+                    bottom: 0,
                     left: 0,
                     right: 10,
-                    top: 0,
-                    bottom: 0
+                    top: 0
                 }
             },
             legend: {
@@ -86,7 +85,8 @@ function resetGraphData() {
                 position: 'bottom',
                 text: 'ApplySci Tenhou Score Pane'
             }
-        }
+        },
+        type: 'line'
     };
 
 }
@@ -145,6 +145,11 @@ function scorePaneInit() {
 
     allowNewHands = true;
     $('#' + paneID)
+        .append($('<button>')
+            .addClass('azpsreset')
+            .click(resetPane)
+            .text('reset score pane')
+        )
         .append($('<div>')
             .addClass('hands')
             .append($('<h3>').text('The ApplySci Tenhou Score Pane').attr('id', 'azps_start')
@@ -172,6 +177,13 @@ function scorePane() {
 
     return pane;
 
+}
+
+function resetPane() {
+
+    resetBetweenGames();
+    scorePane().empty();
+    scorePaneInit();
 }
 
 function rememberPlayerName(node) {
@@ -470,7 +482,6 @@ function insertWinTableIntoDOM(node, totalLine, nYaku) {
         graphData.data.labels.push(handName);
         let scoreDiv = showResult(totalLine, handName, node, true);
         // pause before revealing the scores, so that we don't spoil any uradora surprise
-        scoreDiv.removeClass('hidden'); // ZZZ TODO
         setTimeout(() => scoreDiv.removeClass('hidden'), 500 + nYaku * 1000);
     }
 
@@ -590,7 +601,7 @@ function scoreChart() {
     pane.prepend(chartEl);
     chartEl.height = Math.ceil(pane.width * 0.6);
     const chart = new Chart(chartEl[0], graphData);
-    $('div.hands', pane).css('top', chartEl.offset().top + chartEl.outerHeight(true) + 10);
+    $('div.hands', pane).css('top', chartEl.offset().top + chartEl.outerHeight(true) + 20);
 
     chartEl.click(curryClickChart(chart, graphData.data.labels));
 
@@ -656,9 +667,7 @@ function handleStart(node) {
     if ($('#' + paneID + ' > div.hands > div').length > 0) {
         return false;
     }
-    resetBetweenGames();
-    scorePane().empty();
-    scorePaneInit();
+    resetPane();
     rememberPlayerName(node);
 
 }

@@ -12,7 +12,7 @@
     position: absolute;
     bottom: 0;
     right: 0;
-    top: 0;
+    top: 20px;
     left: 0;
 }
 
@@ -67,6 +67,17 @@
 
 #azpspane .chart {
     backgroundColor: #111;
+}
+
+#azpspane button.azpsreset {
+    position: fixed;
+    top: 0;
+    margin:2px;
+}
+
+#azpspane button.azpsreset:hover {
+    background-color: red;
+    color: white;
 }
 
 .azpsgrey {
