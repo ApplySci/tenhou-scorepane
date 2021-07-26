@@ -5,10 +5,12 @@
 "use strict";
 
 let mutationObserver;
+let isT4;
+let isReplay;
+let timeOfLastWin = 0;
 let $ = jQuery;
 let handNum = 1;
 let playerName = null;
-let isT4;
 let graphData = {};
 let allowNewHands = true;
 const paneID = 'azpspane';
@@ -297,7 +299,7 @@ function getHandImageT3(tiles, winner) {
             tdy = Math.round(w * sdy/sdx);
             break;
     }
-    console.log('s=' + sdx + ',' + sdy + '; t=' + tdx + ',' + tdy);
+    //console.log('s=' + sdx + ',' + sdy + '; t=' + tdx + ',' + tdy);
     tiles.height = tdy;
     ctx.translate(tiles.width/2, tdy/2);
     ctx.rotate(rotation);
@@ -387,6 +389,9 @@ function getOneScore(node, player) {
 
     let totalLine = '';
     let nNodes = node.childNodes.length;
+    if (nNodes === 0) {
+        return '';
+    }
     let score = 0;
 
     [0, 2, 4].forEach(function (idx) {
@@ -418,9 +423,11 @@ function getOneScore(node, player) {
 function scoreTableT3(node) {
 
     let totalLine = '<table>';
-    let nPlayers = 3 + ($('#sc3', node).length ? 1 : 0);
-    Array.from(new Array(nPlayers).keys()).forEach(function (i) {
-        totalLine += getOneScore($('#sc' + i, node)[0], nPlayers - 1 - i);
+    Array.from(new Array(4).keys()).forEach(function (i) {
+        let elem = $('#sc' + i, node);
+        if (elem.length) {
+            totalLine += getOneScore(elem[0], 3 - i);
+        }
     });
     return totalLine + '</table>';
 
@@ -475,6 +482,13 @@ function yakuLine(yaku, han) {
 
 }
 
+function isLogReplay() {
+    // deliberately disabled for now as that isn't a reliable indicator that this is a replay
+    return false;
+    console.log('log replay');
+    return $('div.nosel > div.tbl > div.tbc.cblink.ts0').length > 0;
+}
+
 function insertWinTableIntoDOM(node, totalLine, nYaku) {
 
     let handName = getHandName();
@@ -482,7 +496,11 @@ function insertWinTableIntoDOM(node, totalLine, nYaku) {
         graphData.data.labels.push(handName);
         let scoreDiv = showResult(totalLine, handName, node, true);
         // pause before revealing the scores, so that we don't spoil any uradora surprise
-        setTimeout(() => scoreDiv.removeClass('hidden'), 500 + nYaku * 1000);
+        if (isLogReplay()) {
+            scoreDiv.removeClass('hidden');
+        } else {
+            setTimeout(() => scoreDiv.removeClass('hidden'), 500 + nYaku * 1000);
+        }
     }
 
 }
@@ -491,7 +509,14 @@ function winTableT3(node) {
 
     let totalLine;
     let nYaku;
+    let now = Date.now();
 
+    if (now - timeOfLastWin < 20000 && !isLogReplay()) {
+        // it's a multiple ron if we see 2 wins within 20 seconds of each other & not a replay
+        handNum--;
+    }
+    timeOfLastWin = now;
+    
     totalLine = appendNodes(node.children[0])  // score
         + '<br>'
         + riichiHonba(node.childNodes[2]);
@@ -542,11 +567,11 @@ function winTableT4(node) {
 
 }
 
-function showWin(node) {
+function handleWin(node) {
 
     scorePane();
     rememberPlayerName(node);
-
+    
     if (isT4) {
         winTableT4(node);
     } else {
@@ -721,7 +746,7 @@ function checkNode(oneNode) {
         || (isT4 && testText.length > 20 && oneNode.className.includes('nopp')
         ) ) {
 
-        return showWin(oneNode);
+        return handleWin(oneNode);
 
     }
 
@@ -733,7 +758,6 @@ function checkNode(oneNode) {
         // https://tenhou.net/3/?log=2016032809gm-0089-0000-19c59dbd&tw=1&ts=7
         // https://tenhou.net/4/?log=2018031407gm-0009-0000-0e47c343&tw=0&ts=2
 
-
         if (stringStartsWith(testText, [
                 '觀戰', 'Redeal: ', 'Torpillage: ', 'Ván hoà: ', 'Powtórka (',
                 'Kyuushu kyuuhai', 'Kyūshu kyūhai',
@@ -743,7 +767,7 @@ function checkNode(oneNode) {
                 'Suucha riichi', 'Sūcha riichi',
                 ])) {
 
-            console.log('is abortive draw');
+            //console.log('is abortive draw');
             return showAbortiveDraw(oneNode);
         }
 
