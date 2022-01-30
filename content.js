@@ -5,8 +5,9 @@
 "use strict";
 
 let mutationObserver;
-let isT4;
-let isReplay;
+let isT4;      // boolean, True if this is tenhou.net/4
+let isParlour; // boolean, True if game is using shuugi Parlour bonuses
+
 let timeOfLastWin = 0;
 let $ = jQuery;
 let handNum = 1;
@@ -123,7 +124,7 @@ function setWidth() {
 
     let gamePane = getGamePane();
     $('#' + paneID).css({
-        'width': Math.floor($('body').width() - gamePane.width() - 40)
+        'width': Math.floor($('body').width() - gamePane.width() - 10)
     });
     moveMainPane();
 
@@ -146,6 +147,7 @@ function moveMainPane() {
 function scorePaneInit() {
 
     allowNewHands = true;
+    isParlour = false;
     $('#' + paneID)
         .append($('<button>')
             .addClass('azpsreset')
@@ -164,7 +166,7 @@ function scorePane() {
     // if our score pane isn't present, create it
 
     let pane = $('#' + paneID);
-    let fontsize = isT4 ? '0.8em' : '0.5em';
+    let fontsize = isT4 ? '0.6em' : '0.4em';
 
     if (pane.length === 0) {
         pane = $('<div>').prop('id', paneID).css('fontSize', fontsize);
@@ -382,40 +384,115 @@ function chartOneScore(player, totalScore, score) {
 
 }
 
+function checkParlour(node, nNodes) {
+    let brCount = 0;
+    for (let i=0; i < nNodes; i++) {
+        if (node.childNodes[i].tagName !== undefined
+            && node.childNodes[i].tagName.toUpperCase() === 'BR') {
+            brCount++;
+        }
+    }
+    return brCount > 1;
+}
+
+// TODO remove "shuugi" from han table too
+function deShuugify(txt) {
+    // instead of using "shuugi" get numeric value of count and use "🔴"
+    return txt.replace( /^([-+0-9]+).*$/ , '$1🔴' );
+}
+
+const doubleZero = '<span style="font-size:85%;opacity:0.75;">00</span>';
+
 function getOneScore(node, player) {
 
     // T3: #scN wind, space, name, space, total score, [optional: delta]
     // T4: <div class="bbg5"><span>東</span> <span>COM</span><br>25000</div>
 
-    let totalLine = '';
     let nNodes = node.childNodes.length;
     if (nNodes === 0) {
         return '';
     }
-    let score = 0;
 
-    [0, 2, 4].forEach(function (idx) {
-        totalLine += '<td>'
-            + (idx < nNodes ? getVal(node.childNodes[idx]) : '')
-            + '</td>';
+    let isBystander;
+    let totalLine = '';
+    let totalScore;
+    let deltaScore;
+    let totalShuugi;
+    let deltaShuugi;
+
+    isParlour = checkParlour(node, nNodes);
+    console.log('parlour: ' + isParlour);
+/*
+ist4 & 5 nodes: no shuugi, bystander
+ist4 & 6 nodes: no shuugi, winner or loser
+
+ist4 & 7 nodes: shuugi, bystander
+ist4 & 9 nodes: shuugi, winner or loser
+
+
+!ist4 & 6 nodes: no shuugi, bystander
+!ist4 & 8 nodes: no shuugi, winner or loser
+
+!ist4 & 9 nodes: shuugi, bystander - has BR at [6].tagName
+!ist4 & 11 nodes: shuugi, winner or loser  - has BR at [8].tagName
+*/
+
+
+    [0, 2].forEach(function (idx) {
+        totalLine += '<td>' + getVal(node.childNodes[idx]) + '</td>';
     });
 
+    totalLine += '<td>';
 
-    if (node.childNodes.length > 5) {
-        score = getVal(node.childNodes[5]);
+    if (isT4) {
+        isBystander = (isParlour && nNodes === 7) || nNodes == 5;
+        if (isParlour) {
+            totalScore = parseFloat(getVal(node.childNodes[4]));
+            totalShuugi = deShuugify(getVal(node.childNodes[7]));
+            totalLine += totalScore + doubleZero + '</td><td>' + totalShuugi;
+            deltaScore = isBystander ? 0 : getVal(node.childNodes[7]);
+            deltaShuugi = isBystander ? 0 : deShuugify(getVal(node.childNodes[7]));
+        } else {
+            totalScore = parseFloat(getVal(node.childNodes[4]));
+            totalLine += totalScore + doubleZero;
+            totalScore = totalScore * 100;
+            deltaScore = isBystander ? 0 : getVal(node.childNodes[7]);
+        }
+    } else {
+        isBystander = (isParlour && nNodes === 8) || nNodes == 6;
+        if (isParlour) {
+            totalScore = parseFloat(getVal(node.childNodes[4]));
+            totalShuugi = deShuugify(getVal(node.childNodes[isBystander ? 7 : 9]));
+            totalLine += totalScore + doubleZero + '</td><td>' + totalShuugi;
+            totalScore = 100 * totalScore;
+            deltaScore = isBystander ? 0 : getVal(node.childNodes[7].childNodes[0]);
+            deltaShuugi = isBystander ? 0 : deShuugify(getVal(node.childNodes[10]));
+        } else {
+            totalScore = parseFloat(getVal(node.childNodes[4]));
+            totalLine += totalScore + doubleZero;
+            totalScore = 100 * totalScore;
+            deltaScore = isBystander ? 0 : getVal(node.childNodes[7].childNodes[0]);
+        }
+    }
+
+    // node.childNodes[idx+1].outerHTML
+    if (isBystander) {
+        totalLine = '<tr>' + totalLine + '</td><td>' + (isParlour ? '</td><td>' : '');
+    } else {
         totalLine =  '<tr class="'
-            + (score > 0 ? 'azpsplus' : 'azpsminus')
+            + (deltaScore > 0 ? 'azpsplus' : 'azpsminus')
             + '">'
             + totalLine
             + '<td>'
-            + score;
-    } else {
-        totalLine = '<tr>' + totalLine + '<td>';
+            + deltaScore
+            + doubleZero;
+
+        if (isParlour) {
+            totalLine += '</td><td>' + deltaShuugi;
+        }
     }
-    let totalScore = parseFloat(getVal(node.childNodes[4]));
-    if (nNodes >= 5) {
-        chartOneScore(player, totalScore, score);
-    }
+    chartOneScore(player, totalScore, 100*parseFloat(deltaScore));
+
     return totalLine + '</td></tr>';
 
 }
@@ -423,12 +500,12 @@ function getOneScore(node, player) {
 function scoreTableT3(node) {
 
     let totalLine = '<table>';
-    Array.from(new Array(4).keys()).forEach(function (i) {
+    for (let i=0; i<4; i++) {
         let elem = $('#sc' + i, node);
         if (elem.length) {
             totalLine += getOneScore(elem[0], 3 - i);
         }
-    });
+    }
     return totalLine + '</table>';
 
 }
@@ -516,7 +593,7 @@ function winTableT3(node) {
         handNum--;
     }
     timeOfLastWin = now;
-    
+
     totalLine = appendNodes(node.children[0])  // score
         + '<br>'
         + riichiHonba(node.childNodes[2]);
@@ -571,7 +648,7 @@ function handleWin(node) {
 
     scorePane();
     rememberPlayerName(node);
-    
+
     if (isT4) {
         winTableT4(node);
     } else {

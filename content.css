@@ -37,6 +37,7 @@
 
 #azpspane table {
     /*width: 100%;*/
+    margin-top: 0.5em;
     padding-top: 0.5em;
     border-collapse: collapse;
 }
@@ -57,10 +58,6 @@
     text-align: right;
 }
 
-#azpspane table {
-    margin-top: 0.5em;
-}
-
 #azpspane canvas {
     width: 100%;
 }
@@ -72,8 +69,8 @@
 #azpspane button.azpsreset {
     position: fixed;
     top: 0;
-    margin:2px;
-    font-size:12px;
+    margin: 2px;
+    font-size: 12px;
 }
 
 #azpspane button.azpsreset:hover {
