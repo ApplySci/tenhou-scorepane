@@ -55,11 +55,11 @@
 }
 
 
-#azpspane td {
+.azpsscores td {
     text-align: right;
 }
 
-#azpspane td:nth-child(1),#azpspane td:nth-child(2) {
+.azpsscores td:nth-child(1), .azpsscores td:nth-child(2) {
     text-align: center;
 }
 

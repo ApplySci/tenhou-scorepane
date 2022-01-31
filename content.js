@@ -395,7 +395,6 @@ function checkParlour(node, nNodes) {
     return brCount > 1;
 }
 
-// TODO remove "shuugi" from han table too
 function deShuugify(txt) {
     // instead of using "shuugi" get numeric value of count and use "🔴"
     return txt.replace( /^([-+0-9]+).*$/ , '$1🔴' );
@@ -499,7 +498,7 @@ ist4 & 9 nodes: shuugi, winner or loser
 
 function scoreTableT3(node) {
 
-    let totalLine = '<table>';
+    let totalLine = '<table class=azpsscores>';
     for (let i=0; i<4; i++) {
         let elem = $('#sc' + i, node);
         if (elem.length) {
@@ -513,7 +512,7 @@ function scoreTableT3(node) {
 function scoreTableT4(node) {
 
     let players = $('.bbg5', node);
-    let table = '<table>';
+    let table = '<table class=azpsscores>';
     for (let i=0; i < players.length; i++) {
         table += getOneScore(players.eq(i)[0], i);
     }
@@ -548,13 +547,23 @@ function showExhaustiveDraw(node) {
 
 function yakuLine(yaku, han) {
 
-    han = han.trimLeft();
+    let nHanElements = han.childNodes === undefined ? 0 : han.childNodes.length;
+    
+    let hanString;
+    if (nHanElements < 2) {
+        hanString = getVal(han);
+    } else {
+        hanString = getVal(han.childNodes[0]).trimLeft() + ' ' + getVal(han.childNodes[1]);
+    }
+    if (nHanElements > 2) {
+        hanString += ' ' + getVal(han.childNodes[2]) + '🔴'
+    }
     return '<tr'
-        + ((han.length > 0 && han[0] === '0') ? ' class=azpsgrey' : '')
+        + ((hanString.length > 0 && hanString[0] === '0') ? ' class=azpsgrey' : '')
         + '><td>'
         + yaku
         + '</td><td>'
-        + han
+        + hanString
         + '</td></tr>';
 
 }
@@ -604,7 +613,7 @@ function winTableT3(node) {
     let yakuTable = $("tr:not(:has(table))", node.childNodes[1]);
     nYaku = yakuTable.length;
     yakuTable.each(function addYakuLine(row) {
-        totalLine += yakuLine(getVal(this.childNodes[0]), getVal(this.childNodes[1]));
+        totalLine += yakuLine(getVal(this.childNodes[0]), this.childNodes[1]);
     });
     totalLine += '</table>';
 
@@ -634,7 +643,7 @@ function winTableT4(node) {
     let yakuList = $('table:first table tr', node);
     nYaku = yakuList.length;
     yakuList.each(function getOneYaku(row) {
-        totalLine += yakuLine($('.yk,.ym', this).text(), $('.hn', this).text());
+        totalLine += yakuLine($('.yk,.ym', this).text(), $('.hn', this)[0]);
     });
     totalLine += '</table>';
 
