@@ -54,8 +54,13 @@
     padding: 0 0.2em;
 }
 
-#azpspane td:nth-child(3),#azpspane td:nth-child(4) {
+
+#azpspane td {
     text-align: right;
+}
+
+#azpspane td:nth-child(1),#azpspane td:nth-child(2) {
+    text-align: center;
 }
 
 #azpspane canvas {

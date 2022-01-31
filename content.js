@@ -447,16 +447,16 @@ ist4 & 9 nodes: shuugi, winner or loser
     if (isT4) {
         isBystander = (isParlour && nNodes === 7) || nNodes == 5;
         if (isParlour) {
-            totalScore = parseFloat(getVal(node.childNodes[4]));
-            totalShuugi = deShuugify(getVal(node.childNodes[7]));
+            totalScore = parseFloat(getVal(node.childNodes[4])) / 100;
+            totalShuugi = deShuugify(getVal(node.childNodes[isBystander ? 6 : 7]));
             totalLine += totalScore + doubleZero + '</td><td>' + totalShuugi;
-            deltaScore = isBystander ? 0 : getVal(node.childNodes[7]);
-            deltaShuugi = isBystander ? 0 : deShuugify(getVal(node.childNodes[7]));
+            deltaScore = isBystander ? 0 : node.childNodes[5].innerHTML.slice(0, -2);
+            deltaShuugi = isBystander ? 0 : deShuugify(getVal(node.childNodes[8]));
         } else {
-            totalScore = parseFloat(getVal(node.childNodes[4]));
+            totalScore = parseFloat(getVal(node.childNodes[4])) / 100;
             totalLine += totalScore + doubleZero;
             totalScore = totalScore * 100;
-            deltaScore = isBystander ? 0 : getVal(node.childNodes[7]);
+            deltaScore = isBystander ? 0 : node.childNodes[5].innerHTML.slice(0, -2);
         }
     } else {
         isBystander = (isParlour && nNodes === 8) || nNodes == 6;
