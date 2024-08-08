@@ -6,7 +6,12 @@
 
 let mutationObserver;
 let isT4;      // boolean, True if this is tenhou.net/4
+let isRon2;    // boolean, True if this is ron2.jp/
 let isParlour; // boolean, True if game is using shuugi Parlour bonuses
+let isMultipleRon; // boolean
+
+let thisHandName = '';
+let previousHandName = 'y';
 
 let timeOfLastWin = 0;
 let $ = jQuery;
@@ -100,6 +105,11 @@ function getGamePane() {
     if (isT4 === undefined) {
         isT4 = window.location.pathname.substring(0,2) === '/4';
     }
+	if (isRon2 === undefined) {
+        isRon2 = window.location.hostname === 'ron2.jp';
+    }
+		
+	
     if (isT4) {
         return $('div.nosel:lt(2)');
     } else {
@@ -137,9 +147,13 @@ function moveMainPane() {
         gamePane.css('transform' ,'translateX(0)');
     } else {
         gamePane
-            .css('margin-left', 10)
+            .css({'margin-left': 10, 'left':0})
             .next()
                 .css('left', 0);
+
+        $.find('.tbc.ts0:not(.bblink)').forEach(function bringForward(el) {
+            $(el).parent().css('z-index', 50);
+        });
     }
 
 }
@@ -156,7 +170,7 @@ function scorePaneInit() {
         )
         .append($('<div>')
             .addClass('hands')
-            .append($('<h3>').text('The ApplySci Tenhou Score Pane').attr('id', 'azps_start')
+            .append($('<h3>').text('The ApplySci Score Pane').attr('id', 'azps_start')
         ));
 
 }
@@ -166,7 +180,7 @@ function scorePane() {
     // if our score pane isn't present, create it
 
     let pane = $('#' + paneID);
-    let fontsize = isT4 ? '0.6em' : '0.4em';
+    let fontsize = isRon2 ? '0.55em' : (isT4 ? '0.7em' : '0.4em');
 
     if (pane.length === 0) {
         pane = $('<div>').prop('id', paneID).css('fontSize', fontsize);
@@ -211,16 +225,16 @@ function rememberPlayerName(node) {
             graphData.data.datasets[i].label = name;
         }
     } else {
-        let player = $('#sc0', node);
+        let player = $('#sc00', node);
         if (player.length) {
-            if ($('#sc3', node).length === 0 && graphData.data.datasets.length === 4) {
+            if ($('#sc03', node).length === 0 && graphData.data.datasets.length === 4) {
                 // remove the green score line (the missing 4th player) for sanma
                 graphData.data.datasets.splice(2,1);
             }
             playerName = player.children('span:last').text();
             graphData.data.datasets[graphData.data.datasets.length - 1].label = decodeURIComponent(playerName);
             for (let i=1; i<4; i++) {
-                player = $('#sc'+i, node);
+                player = $('#sc0'+i, node);
                 if (player.length > 0) {
                     let name = player.children('span:last').text();
                     graphData.data.datasets[3 - i].label = name;
@@ -404,7 +418,7 @@ const doubleZero = '<span style="font-size:85%;opacity:0.75;">00</span>';
 
 function getOneScore(node, player) {
 
-    // T3: #scN wind, space, name, space, total score, [optional: delta]
+    // T3: #sc0N wind, space, name, space, total score, [optional: delta]
     // T4: <div class="bbg5"><span>東</span> <span>COM</span><br>25000</div>
 
     let nNodes = node.childNodes.length;
@@ -420,22 +434,7 @@ function getOneScore(node, player) {
     let deltaShuugi;
 
     isParlour = checkParlour(node, nNodes);
-    console.log('parlour: ' + isParlour);
-/*
-ist4 & 5 nodes: no shuugi, bystander
-ist4 & 6 nodes: no shuugi, winner or loser
-
-ist4 & 7 nodes: shuugi, bystander
-ist4 & 9 nodes: shuugi, winner or loser
-
-
-!ist4 & 6 nodes: no shuugi, bystander
-!ist4 & 8 nodes: no shuugi, winner or loser
-
-!ist4 & 9 nodes: shuugi, bystander - has BR at [6].tagName
-!ist4 & 11 nodes: shuugi, winner or loser  - has BR at [8].tagName
-*/
-
+    //console.log('parlour: ' + isParlour);
 
     [0, 2].forEach(function (idx) {
         totalLine += '<td>' + getVal(node.childNodes[idx]) + '</td>';
@@ -450,11 +449,10 @@ ist4 & 9 nodes: shuugi, winner or loser
             totalShuugi = deShuugify(getVal(node.childNodes[isBystander ? 6 : 7]));
             totalLine += totalScore + doubleZero + '</td><td>' + totalShuugi;
             deltaScore = isBystander ? 0 : node.childNodes[5].innerHTML.slice(0, -2);
-            deltaShuugi = isBystander ? 0 : deShuugify(getVal(node.childNodes[8]));
+            deltaShuugi = isBystander || node.childNodes.length < 9 ? 0 : deShuugify(getVal(node.childNodes[8]));
         } else {
             totalScore = parseFloat(getVal(node.childNodes[4])) / 100;
             totalLine += totalScore + doubleZero;
-            totalScore = totalScore * 100;
             deltaScore = isBystander ? 0 : node.childNodes[5].innerHTML.slice(0, -2);
         }
     } else {
@@ -463,13 +461,11 @@ ist4 & 9 nodes: shuugi, winner or loser
             totalScore = parseFloat(getVal(node.childNodes[4]));
             totalShuugi = deShuugify(getVal(node.childNodes[isBystander ? 7 : 9]));
             totalLine += totalScore + doubleZero + '</td><td>' + totalShuugi;
-            totalScore = 100 * totalScore;
             deltaScore = isBystander ? 0 : getVal(node.childNodes[7].childNodes[0]);
-            deltaShuugi = isBystander ? 0 : deShuugify(getVal(node.childNodes[10]));
+            deltaShuugi = isBystander || node.childNodes.length < 11 ? 0 : deShuugify(getVal(node.childNodes[10]));
         } else {
             totalScore = parseFloat(getVal(node.childNodes[4]));
             totalLine += totalScore + doubleZero;
-            totalScore = 100 * totalScore;
             deltaScore = isBystander ? 0 : getVal(node.childNodes[7].childNodes[0]);
         }
     }
@@ -487,10 +483,10 @@ ist4 & 9 nodes: shuugi, winner or loser
             + doubleZero;
 
         if (isParlour) {
-            totalLine += '</td><td>' + deltaShuugi;
+            totalLine += '</td><td>' + (deltaShuugi === 0 ? '' : deltaShuugi);
         }
     }
-    chartOneScore(player, totalScore, 100*parseFloat(deltaScore));
+    chartOneScore(player, 100*totalScore, 100*parseFloat(deltaScore));
 
     return totalLine + '</td></tr>';
 
@@ -499,8 +495,9 @@ ist4 & 9 nodes: shuugi, winner or loser
 function scoreTableT3(node) {
 
     let totalLine = '<table class=azpsscores>';
+    isMultipleRon = false;
     for (let i=0; i<4; i++) {
-        let elem = $('#sc' + i, node);
+        let elem = $('#sc0' + i, node);
         if (elem.length) {
             totalLine += getOneScore(elem[0], 3 - i);
         }
@@ -513,6 +510,7 @@ function scoreTableT4(node) {
 
     let players = $('.bbg5', node);
     let table = '<table class=azpsscores>';
+    isMultipleRon = thisHandName === previousHandName;
     for (let i=0; i < players.length; i++) {
         table += getOneScore(players.eq(i)[0], i);
     }
@@ -548,7 +546,7 @@ function showExhaustiveDraw(node) {
 function yakuLine(yaku, han) {
 
     let nHanElements = han.childNodes === undefined ? 0 : han.childNodes.length;
-    
+
     let hanString;
     if (nHanElements < 2) {
         hanString = getVal(han);
@@ -591,11 +589,12 @@ function insertWinTableIntoDOM(node, totalLine, nYaku) {
 
 }
 
-function winTableT3(node) {
+function winTableT3(newNode) {
 
     let totalLine;
     let nYaku;
     let now = Date.now();
+    let node=newNode.children[0];
 
     if (now - timeOfLastWin < 20000 && !isLogReplay()) {
         // it's a multiple ron if we see 2 wins within 20 seconds of each other & not a replay
@@ -796,6 +795,7 @@ function stringStartsWith(haystack, needles) {
 
 }
 
+
 function checkNode(oneNode) {
 
     let testText = oneNode.innerText;
@@ -828,17 +828,19 @@ function checkNode(oneNode) {
         }
     }
 
-    if (oneNode.childNodes[0].id === 'total'
-        || (isT4 && testText.length > 20 && oneNode.className.includes('nopp')
-        ) ) {
+    try {
+        if (oneNode.childNodes[0].childNodes[0].id === 'total'
+            || (isT4 && testText.length > 20 && oneNode.className.includes('nopp')
+            ) ) {
 
-        return handleWin(oneNode);
+            return handleWin(oneNode);
 
-    }
+        }
+    } catch (e) {}
 
     if (oneNode.className === 'tbc' && $('button', oneNode).length
             && $('table', oneNode).length === 1
-            && !isT4 && $('#sc0', oneNode).length
+            && !isT4 && $('#sc00', oneNode).length
             && testText.includes('') && testText.includes('')) {
 
         // https://tenhou.net/3/?log=2016032809gm-0089-0000-19c59dbd&tw=1&ts=7

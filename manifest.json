@@ -1,9 +1,13 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 3,
     "name": "Tenhou score pane",
-    "version": "1.7.9",
-    "description": "Adds a pane to the tenhou.net clients (/3, /4) in-game which contains the score history of the hands in the current game",
-    "icons": {
+    "version": "3.0.0",
+    "description": "Adds a pane to the tenhou.net and ron2.jp clients (/3, /4) in-game which contains the score history of the hands in the current game",
+    "host_permissions": [
+        "https://tenhou.net/*",
+        "https://ron2.jp/*"
+    ],
+  "icons": {
         "16": "icons/16.png",
         "32": "icons/32.png",
         "48": "icons/48.png",
@@ -17,7 +21,8 @@
             "matches": [
                 "*://tenhou.net/0*",
                 "*://tenhou.net/4*",
-                "*://tenhou.net/3*"
+                "*://tenhou.net/3*",
+                "*://ron2.jp/3*"
             ],
             "js": [
                 "jquery.js",
